@@ -1,0 +1,257 @@
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { User, Department, Course, Mark, Attendance, Material, ExamSchedule, Student, Staff, Alumnus, Assignment, StudentSubmission, ClassInDepartment, Permission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate } from '../../types';
+import { RootState } from '../index';
+import * as D from '../../constants';
+
+export interface AppState {
+    users: (User | Student | Staff | Alumnus)[];
+    departments: Department[];
+    courses: Course[];
+    marks: Mark[];
+    attendance: Attendance[];
+    materials: Material[];
+    examSchedules: ExamSchedule[];
+    assignments: Assignment[];
+    submissions: StudentSubmission[];
+    classes: ClassInDepartment[];
+    tutors: Tutor[];
+    tutorApplications: TutorApplication[];
+    tutoringSessions: TutoringSession[];
+    mentorAssignments: MentorAssignment[];
+    remarks: Remark[];
+    onDutyApplications: OnDutyApplication[];
+    // FIX: Add state for no dues certificates.
+    noDuesCertificates: NoDuesCertificate[];
+}
+
+const initialState: AppState = {
+    users: D.USERS,
+    departments: D.DEPARTMENTS,
+    courses: D.COURSES,
+    marks: [],
+    attendance: [],
+    materials: [],
+    examSchedules: [],
+    assignments: [],
+    submissions: [],
+    classes: D.CLASSES,
+    tutors: [],
+    tutorApplications: [],
+    tutoringSessions: [],
+    mentorAssignments: [],
+    remarks: [],
+    onDutyApplications: [],
+    // FIX: Initialize state for no dues certificates.
+    noDuesCertificates: [],
+};
+
+const appSlice = createSlice({
+    name: 'app',
+    initialState,
+    reducers: {
+        // User Management
+        addUserRequest: (state, action: PayloadAction<Omit<User, 'id' | 'permissions'>>) => {},
+        // FIX: Update Omit type to allow 'phone' and omit 'dues' for bulk user creation.
+        bulkAddUsersRequest: (state, action: PayloadAction<Omit<Student, 'id'|'permissions'|'cgpa'|'sgpa'|'totalWorkingDays'|'daysPresent'|'address'|'photoUrl'|'dues'>[]>) => {},
+        transferStudentsRequest: (state, action: PayloadAction<{ studentIds: string[], newDepartmentId: string }>) => {},
+        promoteClassRequest: (state, action: PayloadAction<{ departmentId: string; year: number }>) => {},
+        updateUserInListRequest: (state, action: PayloadAction<User>) => {},
+        bulkUpdateUsersStatusRequest: (state, action: PayloadAction<{ userIds: string[], status: 'Active' | 'Inactive' }>) => {},
+        bulkPromoteStudentsRequest: (state, action: PayloadAction<{ userIds: string[] }>) => {},
+        removeUserRequest: (state, action: PayloadAction<string>) => {},
+        updateUserPermissionsRequest: (state, action: PayloadAction<{ userId: string, permissions: Permission[] }>) => {},
+        fetchUsersRequest: (state) => {},
+        setUsers: (state, action: PayloadAction<(User | Student | Staff | Alumnus)[]>) => {
+            state.users = action.payload;
+        },
+
+        // Department Management
+        addDepartmentRequest: (state, action: PayloadAction<string>) => {},
+        fetchDepartmentsRequest: (state) => {},
+        setDepartments: (state, action: PayloadAction<Department[]>) => {
+            state.departments = action.payload;
+        },
+        assignHODRequest: (state, action: PayloadAction<{ deptId: string; staffId: string } | { deptId: string; newUser: { name: string; email: string; contact?: string } }>) => {},
+        assignAdvisorRequest: (state, action: PayloadAction<{ departmentId: string; year: number; advisorId: string }>) => {},
+        fetchCoursesRequest: (state) => {},
+        setCourses: (state, action: PayloadAction<Course[]>) => {
+            state.courses = action.payload;
+        },
+        fetchMarksRequest: (state) => {},
+        setMarks: (state, action: PayloadAction<Mark[]>) => {
+            state.marks = action.payload;
+        },
+        fetchAttendanceRequest: (state) => {},
+        setAttendance: (state, action: PayloadAction<Attendance[]>) => {
+            state.attendance = action.payload;
+        },
+        setClasses: (state, action: PayloadAction<ClassInDepartment[]>) => {
+            state.classes = action.payload;
+        },
+        
+        // Staff Actions
+        submitAttendanceRequest: (state, action: PayloadAction<{ courseId: string; records: Record<string, boolean>}>) => {},
+        saveMarksRequest: (state, action: PayloadAction<{ courseId: string; marks: Record<string, { internal?: number; exam?: number; }>}>) => {},
+        addMaterialRequest: (state, action: PayloadAction<Omit<Material, 'id' | 'uploadedAt'>>) => {},
+        fetchMaterialsRequest: (state) => {},
+        setMaterials: (state, action: PayloadAction<Material[]>) => {
+            state.materials = action.payload;
+        },
+        addAssignmentRequest: (state, action: PayloadAction<Omit<Assignment, 'id' | 'submitted'>>) => {},
+        bulkAssignTopicsRequest: (state, action: PayloadAction<{ courseId: string, assignments: { studentId: string, topic: string, remarks?: string }[] }>) => {},
+        fetchAssignmentsRequest: (state) => {},
+        setAssignments: (state, action: PayloadAction<Assignment[]>) => {
+            state.assignments = action.payload;
+        },
+        submitAssignmentRequest: (state, action: PayloadAction<Omit<StudentSubmission, 'submittedAt' | 'status' | 'grade'>>) => {},
+        gradeSubmissionRequest: (state, action: PayloadAction<{ studentId: string; assignmentId: string; grade: string; }>) => {},
+        fetchSubmissionsRequest: (state) => {},
+        setSubmissions: (state, action: PayloadAction<StudentSubmission[]>) => {
+            state.submissions = action.payload;
+        },
+
+        // Exam Cell Actions
+        addExamSchedulesRequest: (state, action: PayloadAction<ExamSchedule[]>) => {},
+        fetchExamSchedulesRequest: (state) => {},
+        setExamSchedules: (state, action: PayloadAction<ExamSchedule[]>) => {
+            state.examSchedules = action.payload;
+        },
+
+        // FIX: Added actions for the Tutoring feature.
+        // Tutoring Actions
+        approveTutorApplicationRequest: (state, action: PayloadAction<string>) => {},
+        bookTutoringSessionRequest: (state, action: PayloadAction<Omit<TutoringSession, 'id' | 'status'>>) => {},
+        fetchTutorsRequest: (state) => {},
+        setTutors: (state, action: PayloadAction<Tutor[]>) => {
+            state.tutors = action.payload;
+        },
+        fetchTutorApplicationsRequest: (state) => {},
+        setTutorApplications: (state, action: PayloadAction<TutorApplication[]>) => {
+            state.tutorApplications = action.payload;
+        },
+        fetchTutoringSessionsRequest: (state) => {},
+        setTutoringSessions: (state, action: PayloadAction<TutoringSession[]>) => {
+            state.tutoringSessions = action.payload;
+        },
+        
+        // Mentor/Advisor Actions
+        autoAssignMenteesRequest: (state, action: PayloadAction<{ departmentId: string }>) => {},
+        updateMentorAssignmentRequest: (state, action: PayloadAction<{ studentId: string; newMentorId: string }>) => {},
+        addRemarkRequest: (state, action: PayloadAction<Omit<Remark, 'id' | 'timestamp'>>) => {},
+        fetchMentorAssignmentsRequest: (state) => {},
+        setMentorAssignments: (state, action: PayloadAction<MentorAssignment[]>) => {
+            state.mentorAssignments = action.payload;
+        },
+        fetchRemarksRequest: (state) => {},
+        setRemarks: (state, action: PayloadAction<Remark[]>) => {
+            state.remarks = action.payload;
+        },
+
+        // OD Actions
+        applyForODRequest: (state, action: PayloadAction<Omit<OnDutyApplication, 'id' | 'status' | 'appliedAt' | 'advisorApprovalId' | 'hodApprovalId' | 'principalApprovalId' | 'rejectedById'>>) => {},
+        processODRequest: (state, action: PayloadAction<{ applicationId: string; decision: 'approve' | 'reject'; }>) => {},
+        updateODApplicationRequest: (state, action: PayloadAction<Partial<OnDutyApplication> & { id: string }>) => {},
+        fetchOnDutyApplicationsRequest: (state) => {},
+        setOnDutyApplications: (state, action: PayloadAction<OnDutyApplication[]>) => {
+            state.onDutyApplications = action.payload;
+        },
+
+        // FIX: Added actions for Dues Management and No Dues Certificates.
+        // Dues Actions
+        updateDuesStatusRequest: (state, action: PayloadAction<{ studentId: string, dueType: 'library' | 'department' | 'accounts', status: boolean }>) => {},
+        issueNoDuesCertificateRequest: (state, action: PayloadAction<string>) => {},
+        fetchNoDuesCertificatesRequest: (state) => {},
+        setNoDuesCertificates: (state, action: PayloadAction<NoDuesCertificate[]>) => {
+            state.noDuesCertificates = action.payload;
+        },
+    }
+});
+
+export const {
+    addUserRequest,
+    bulkAddUsersRequest,
+    transferStudentsRequest,
+    promoteClassRequest,
+    updateUserInListRequest,
+    bulkUpdateUsersStatusRequest,
+    bulkPromoteStudentsRequest,
+    removeUserRequest,
+    updateUserPermissionsRequest,
+    fetchUsersRequest,
+    setUsers,
+    addDepartmentRequest,
+    fetchDepartmentsRequest,
+    setDepartments,
+    assignHODRequest,
+    assignAdvisorRequest,
+    fetchCoursesRequest,
+    setCourses,
+    fetchMarksRequest,
+    setMarks,
+    fetchAttendanceRequest,
+    setAttendance,
+    setClasses,
+    submitAttendanceRequest,
+    saveMarksRequest,
+    addMaterialRequest,
+    fetchMaterialsRequest,
+    setMaterials,
+    addAssignmentRequest,
+    bulkAssignTopicsRequest,
+    fetchAssignmentsRequest,
+    setAssignments,
+    submitAssignmentRequest,
+    gradeSubmissionRequest,
+    fetchSubmissionsRequest,
+    setSubmissions,
+    addExamSchedulesRequest,
+    fetchExamSchedulesRequest,
+    setExamSchedules,
+    approveTutorApplicationRequest,
+    bookTutoringSessionRequest,
+    fetchTutorsRequest,
+    setTutors,
+    fetchTutorApplicationsRequest,
+    setTutorApplications,
+    fetchTutoringSessionsRequest,
+    setTutoringSessions,
+    autoAssignMenteesRequest,
+    updateMentorAssignmentRequest,
+    addRemarkRequest,
+    fetchMentorAssignmentsRequest,
+    setMentorAssignments,
+    fetchRemarksRequest,
+    setRemarks,
+    applyForODRequest,
+    processODRequest,
+    updateODApplicationRequest,
+    fetchOnDutyApplicationsRequest,
+    setOnDutyApplications,
+    updateDuesStatusRequest,
+    issueNoDuesCertificateRequest,
+    fetchNoDuesCertificatesRequest,
+    setNoDuesCertificates,
+} = appSlice.actions;
+
+// Selectors
+export const selectAllUsers = (state: RootState) => state.app.users;
+export const selectAllDepartments = (state: RootState) => state.app.departments;
+export const selectAllCourses = (state: RootState) => state.app.courses;
+export const selectAllMarks = (state: RootState) => state.app.marks;
+export const selectAllAttendance = (state: RootState) => state.app.attendance;
+export const selectAllMaterials = (state: RootState) => state.app.materials;
+export const selectAllExamSchedules = (state: RootState) => state.app.examSchedules;
+export const selectAllAssignments = (state: RootState) => state.app.assignments;
+export const selectAllSubmissions = (state: RootState) => state.app.submissions;
+export const selectAllClasses = (state: RootState) => state.app.classes;
+export const selectAllTutors = (state: RootState) => state.app.tutors;
+export const selectAllTutorApplications = (state: RootState) => state.app.tutorApplications;
+export const selectAllTutoringSessions = (state: RootState) => state.app.tutoringSessions;
+export const selectAllMentorAssignments = (state: RootState) => state.app.mentorAssignments;
+export const selectAllRemarks = (state: RootState) => state.app.remarks;
+export const selectAllODApplications = (state: RootState) => state.app.onDutyApplications;
+// FIX: Add selector for No Dues Certificates.
+export const selectAllNoDuesCertificates = (state: RootState) => state.app.noDuesCertificates;
+
+
+export default appSlice.reducer;

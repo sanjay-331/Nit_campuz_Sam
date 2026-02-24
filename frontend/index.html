@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NIT Campuz</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.8.2",
+    "recharts": "https://aistudiocdn.com/recharts@^3.1.2",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.17.0",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^11.1.9",
+    "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
+    "tailwind-merge": "https://aistudiocdn.com/tailwind-merge@^3.3.1",
+    "redux": "https://aistudiocdn.com/redux@^5.0.1",
+    "react-redux": "https://aistudiocdn.com/react-redux@^9.1.2",
+    "@reduxjs/toolkit": "https://aistudiocdn.com/@reduxjs/toolkit@^2.2.6",
+    "redux-saga": "https://aistudiocdn.com/redux-saga@^1.3.0",
+    "redux-saga/": "https://aistudiocdn.com/redux-saga@^1.3.0/"
+  }
+}
+</script>
+<style>
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .bg-pattern {
+    background-color: #f8fafc; /* bg-slate-50 */
+    background-image: radial-gradient(circle at 1px 1px, #e5e7eb /* bg-gray-200 */ 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+  .responsive-columns {
+      column-count: 1;
+      column-gap: 1.5rem; /* 24px */
+  }
+  @media (min-width: 640px) {
+      .responsive-columns {
+          column-count: 2;
+      }
+  }
+  @media (min-width: 1024px) {
+      .responsive-columns {
+          column-count: 3;
+      }
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .shimmer-bg {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer-bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0.5) 60%,
+      rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 2s infinite;
+  }
+</style>
+<style type="text/css" media="print">
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+  body {
+    background: #fff !important;
+    -webkit-filter: grayscale(100%);
+    filter: grayscale(100%);
+  }
+  /* Hide all non-essential layout components */
+  header, .md\:flex.md\:flex-shrink-0, .fixed.bottom-0, .fixed.bottom-6.right-6, .no-print {
+    display: none !important;
+  }
+  /* Expand the main content area to full width */
+  div[class*="md:ml-"] {
+    margin-left: 0 !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  /* Remove shadows and borders from printed cards for a cleaner look */
+  .card-print {
+    box-shadow: none !important;
+    border: none !important;
+  }
+</style>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-pattern">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

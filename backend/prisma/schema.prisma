@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  PRINCIPAL
+  HOD
+  STAFF
+  STUDENT
+  EXAM_CELL
+}
+
+enum StudentStatus {
+  ACTIVE
+  ALUMNI
+  INACTIVE
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         UserRole
+  departmentId String?
+  status       StudentStatus @default(ACTIVE)
+  phone        String?
+  address      String?
+  photoUrl     String?
+  permissions  String[]
+
+  studentProfile StudentProfile?
+  alumniProfile  AlumniProfile?
+
+  department Department? @relation(fields: [departmentId], references: [id])
+}
+
+model StudentProfile {
+  id            String  @id @default(uuid())
+  userId        String  @unique
+  user          User    @relation(fields: [userId], references: [id])
+  regNo         String  @unique
+  section       String
+  admissionYear Int
+  year          Int
+  cgpa          Float   @default(0.0)
+
+  // Dues
+  libraryDue    Boolean @default(false)
+  departmentDue Boolean @default(false)
+  accountsDue   Boolean @default(false)
+}
+
+model AlumniProfile {
+  id             String  @id @default(uuid())
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id])
+  regNo          String  @unique
+  section        String
+  admissionYear  Int
+  year           Int
+  cgpa           Float
+  graduationYear Int
+  finalCgpa      Float
+  job            String?
+  company        String?
+  location       String?
+}
+
+model Department {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  users   User[]
+  classes Class[]
+  courses Course[]
+}
+
+model Class {
+  id           String  @id @default(uuid())
+  departmentId String
+  year         Int
+  advisorId    String?
+
+  department Department @relation(fields: [departmentId], references: [id])
+}
+
+model Course {
+  id           String @id @default(uuid())
+  name         String
+  code         String @unique
+  staffId      String // Instructor
+  departmentId String
+  credits      Int
+  semester     Int
+
+  department Department   @relation(fields: [departmentId], references: [id])
+  materials  Material[]
+  assignments Assignment[]
+  marks       Mark[]
+  attendance  Attendance[]
+}
+
+model Mark {
+  id         String  @id @default(uuid())
+  courseId   String
+  studentId  String
+  semester   Int
+  internal   Float?
+  exam       Float?
+  grade      String?
+  gradePoint Float?
+
+  course Course @relation(fields: [courseId], references: [id])
+}
+
+model Attendance {
+  id        String   @id @default(uuid())
+  courseId  String
+  studentId String
+  date      DateTime
+  present   Boolean
+
+  course Course @relation(fields: [courseId], references: [id])
+}
+
+model Material {
+  id         String   @id @default(uuid())
+  courseId   String
+  title      String
+  type       String
+  url        String
+  uploadedAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id])
+}
+
+model Assignment {
+  id       String   @id @default(uuid())
+  courseId String
+  title    String
+  dueDate  DateTime
+
+  course      Course       @relation(fields: [courseId], references: [id])
+  submissions Submission[]
+}
+
+model Submission {
+  id             String   @id @default(uuid())
+  assignmentId   String
+  studentId      String
+  submittedAt    DateTime @default(now())
+  fileUrl        String?
+  textSubmission String?
+  status         String
+  grade          String?
+  topic          String?
+  remarks        String?
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+}
+
+model MentorAssignment {
+  id        String @id @default(uuid())
+  studentId String @unique
+  mentorId  String
+}
+
+model Remark {
+  id        String   @id @default(uuid())
+  studentId String
+  mentorId  String
+  text      String
+  timestamp DateTime @default(now())
+}
+
+model OnDutyApplication {
+  id                  String   @id @default(uuid())
+  applicantId         String
+  reason              String
+  fromDate            DateTime
+  toDate              DateTime
+  type                String
+  status              String
+  advisorApprovalId   String?
+  hodApprovalId       String?
+  principalApprovalId String?
+  rejectedById        String?
+  appliedAt           DateTime @default(now())
+}
+
+model TutoringSession {
+  id          String   @id @default(uuid())
+  tutorId     String
+  studentId   String
+  subject     String
+  scheduledAt DateTime
+  status      String
+}
+
+model Tutor {
+  id        String   @id @default(uuid())
+  studentId String   @unique
+  subjects  String[]
+  rating    Float    @default(5.0)
+  bio       String
+}
+
+model TutorApplication {
+  id        String   @id @default(uuid())
+  studentId String
+  subjects  String[]
+  statement String
+  status    String   @default("pending")
+}
+
+model ExamSchedule {
+  id         String @id @default(uuid())
+  courseCode String
+  courseName String
+  date       String
+  time       String
+  duration   String
+  hall       String
+}
+
+model NoDuesCertificate {
+  id        String    @id @default(uuid())
+  studentId String
+  status    String    @default("Requested")
+  issuedAt  DateTime?
+}
+
+model Dues {
+  id         String  @id @default(uuid())
+  studentId  String  @unique
+  library    Boolean @default(false)
+  department Boolean @default(false)
+  accounts   Boolean @default(false)
+}

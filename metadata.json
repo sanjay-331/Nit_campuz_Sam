@@ -1,0 +1,5 @@
+{
+  "name": "Nit_Campuz_frontend",
+  "description": "A comprehensive Learning Management System (LMS) for educational institutions, featuring role-based access for Admins, Principals, HODs, Staff, Students, and Exam Cell personnel. Includes an integrated AI assistant to streamline tasks and provide support.",
+  "requestFramePermissions": []
+}
