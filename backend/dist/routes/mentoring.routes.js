@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const mentoring_controller_1 = require("../controllers/mentoring.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.requireAuth);
+router.get('/assignments', mentoring_controller_1.getAllMentorAssignments);
+router.post('/assignments/auto-assign', (0, auth_middleware_1.requireRole)([client_1.UserRole.HOD, client_1.UserRole.ADMIN]), mentoring_controller_1.autoAssignMentees);
+router.put('/assignments', (0, auth_middleware_1.requireRole)([client_1.UserRole.HOD, client_1.UserRole.ADMIN, client_1.UserRole.STAFF]), mentoring_controller_1.updateMentorAssignment);
+router.get('/remarks', mentoring_controller_1.getAllRemarks);
+router.post('/remarks', (0, auth_middleware_1.requireRole)([client_1.UserRole.STAFF, client_1.UserRole.HOD, client_1.UserRole.ADMIN]), mentoring_controller_1.createRemark);
+exports.default = router;

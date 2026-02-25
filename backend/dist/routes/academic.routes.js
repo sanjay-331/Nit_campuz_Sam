@@ -8,7 +8,13 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.requireAuth);
 router.get('/courses', academic_controller_1.getAllCourses);
 router.get('/departments', academic_controller_1.getAllDepartments);
-// Only Staff, HOD, and Admins can submit marks or attendance
+router.get('/marks', academic_controller_1.getAllMarks);
+router.get('/attendance', academic_controller_1.getAllAttendance);
+router.get('/materials', academic_controller_1.getAllMaterials);
+router.get('/exam-schedules', academic_controller_1.getAllExamSchedules);
+// Only Staff, HOD, and Admins can submit marks or attendance or upload materials
 router.post('/marks', (0, auth_middleware_1.requireRole)([client_1.UserRole.STAFF, client_1.UserRole.HOD, client_1.UserRole.ADMIN]), academic_controller_1.saveMarks);
 router.post('/attendance', (0, auth_middleware_1.requireRole)([client_1.UserRole.STAFF, client_1.UserRole.HOD, client_1.UserRole.ADMIN]), academic_controller_1.submitAttendance);
+router.post('/materials', (0, auth_middleware_1.requireRole)([client_1.UserRole.STAFF, client_1.UserRole.HOD, client_1.UserRole.ADMIN]), academic_controller_1.createMaterial);
+router.post('/exam-schedules', (0, auth_middleware_1.requireRole)([client_1.UserRole.EXAM_CELL, client_1.UserRole.ADMIN]), academic_controller_1.createExamSchedule);
 exports.default = router;

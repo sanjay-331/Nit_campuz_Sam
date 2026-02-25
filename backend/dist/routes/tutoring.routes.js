@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const tutoring_controller_1 = require("../controllers/tutoring.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const client_1 = require("@prisma/client");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.requireAuth);
+router.get('/tutors', tutoring_controller_1.getAllTutors);
+router.get('/applications', (0, auth_middleware_1.requireRole)([client_1.UserRole.HOD, client_1.UserRole.ADMIN, client_1.UserRole.STAFF]), tutoring_controller_1.getAllTutorApplications);
+router.get('/sessions', tutoring_controller_1.getAllTutoringSessions);
+router.post('/applications/:id/approve', (0, auth_middleware_1.requireRole)([client_1.UserRole.HOD, client_1.UserRole.ADMIN]), tutoring_controller_1.approveTutorApplication);
+router.post('/sessions', tutoring_controller_1.bookTutoringSession);
+exports.default = router;

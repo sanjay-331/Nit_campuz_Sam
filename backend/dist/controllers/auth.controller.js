@@ -37,8 +37,24 @@ const login = async (req, res) => {
             res.status(401).json({ message: 'Invalid credentials' });
             return;
         }
+        // Base permissions map based on frontend role expectations
+        const rolePermissions = {
+            'ADMIN': ['users:manage', 'users:view', 'departments:manage', 'departments:view', 'logs:view', 'system:configure', 'alumni:manage', 'reports:generate', 'students:promote'],
+            'PRINCIPAL': ['users:view', 'departments:view', 'reports:generate'],
+            'HOD': ['users:view', 'students:promote'],
+            'STAFF': [],
+            'STUDENT': [],
+            'EXAM_CELL': ['users:view', 'reports:generate']
+        };
         // Don't send the password hash back
-        const { password: _, ...userWithoutPassword } = user;
+        const { password: _, studentProfile, alumniProfile, ...userWithoutPassword } = user;
+        const profileData = studentProfile || alumniProfile || {};
+        // Attach dynamically resolved permissions
+        const userWithPermissions = {
+            ...userWithoutPassword,
+            ...profileData,
+            permissions: rolePermissions[user.role] || []
+        };
         // Create JWT Token
         const payload = {
             sub: user.id,
@@ -49,7 +65,7 @@ const login = async (req, res) => {
         const token = jwt_simple_1.default.encode(payload, secret);
         res.json({
             token,
-            user: userWithoutPassword
+            user: userWithPermissions
         });
     }
     catch (error) {

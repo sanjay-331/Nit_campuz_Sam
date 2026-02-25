@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllDepartments = exports.getAllCourses = exports.submitAttendance = exports.saveMarks = void 0;
+exports.createExamSchedule = exports.getAllExamSchedules = exports.createMaterial = exports.getAllMaterials = exports.getAllAttendance = exports.getAllMarks = exports.getAllDepartments = exports.getAllCourses = exports.submitAttendance = exports.saveMarks = void 0;
 const client_1 = require("@prisma/client");
 const adapter_pg_1 = require("@prisma/adapter-pg");
 const pg_1 = require("pg");
@@ -150,3 +150,83 @@ const getAllDepartments = async (req, res) => {
     }
 };
 exports.getAllDepartments = getAllDepartments;
+const getAllMarks = async (req, res) => {
+    try {
+        const marks = await prisma.mark.findMany({
+            include: { course: true }
+        });
+        res.json(marks);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllMarks = getAllMarks;
+const getAllAttendance = async (req, res) => {
+    try {
+        const attendance = await prisma.attendance.findMany({
+            include: { course: true }
+        });
+        res.json(attendance);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllAttendance = getAllAttendance;
+const getAllMaterials = async (req, res) => {
+    try {
+        const materials = await prisma.material.findMany({
+            include: { course: true }
+        });
+        res.json(materials);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllMaterials = getAllMaterials;
+const createMaterial = async (req, res) => {
+    try {
+        const { courseId, title, type, url } = req.body;
+        if (!courseId || !title || !type || !url) {
+            res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        const newMaterial = await prisma.material.create({
+            data: { courseId, title, type, url }
+        });
+        res.json(newMaterial);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.createMaterial = createMaterial;
+const getAllExamSchedules = async (req, res) => {
+    try {
+        const schedules = await prisma.examSchedule.findMany();
+        res.json(schedules);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllExamSchedules = getAllExamSchedules;
+const createExamSchedule = async (req, res) => {
+    try {
+        const { courseCode, courseName, date, time, duration, hall } = req.body;
+        if (!courseCode || !date || !time || !hall) {
+            res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        const newSchedule = await prisma.examSchedule.create({
+            data: { courseCode, courseName, date, time, duration, hall }
+        });
+        res.json(newSchedule);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.createExamSchedule = createExamSchedule;

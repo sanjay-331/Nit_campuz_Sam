@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.promoteClass = exports.getAllUsers = void 0;
+exports.promoteClass = exports.updateUserPermissions = exports.getAllUsers = void 0;
 const client_1 = require("@prisma/client");
 const adapter_pg_1 = require("@prisma/adapter-pg");
 const pg_1 = require("pg");
@@ -17,10 +17,24 @@ const getAllUsers = async (req, res) => {
                 alumniProfile: true,
             }
         });
-        // In a real app we would map this to match exactly what the frontend store expects
-        // but Prisma include already provides most of the required nested data.
-        const sanitizedUsers = users.map(({ password, ...user }) => user);
-        res.json(sanitizedUsers);
+        const rolePermissions = {
+            'ADMIN': ['users:manage', 'users:view', 'departments:manage', 'departments:view', 'logs:view', 'system:configure', 'alumni:manage', 'reports:generate', 'students:promote', 'MANAGE_USERS', 'MANAGE_DEPARTMENTS'],
+            'PRINCIPAL': ['users:view', 'departments:view', 'reports:generate'],
+            'HOD': ['users:view', 'students:promote'],
+            'STAFF': [],
+            'STUDENT': [],
+            'EXAM_CELL': ['users:view', 'reports:generate']
+        };
+        const sanitizedUsers = users.map((u) => {
+            const { password, studentProfile, alumniProfile, ...user } = u;
+            const profileData = studentProfile || alumniProfile || {};
+            return {
+                ...user,
+                ...profileData,
+                permissions: user.permissions && user.permissions.length > 0 ? user.permissions : rolePermissions[user.role] || []
+            };
+        });
+        res.status(200).json(sanitizedUsers);
     }
     catch (error) {
         console.error('Error fetching users:', error);
@@ -28,6 +42,32 @@ const getAllUsers = async (req, res) => {
     }
 };
 exports.getAllUsers = getAllUsers;
+const updateUserPermissions = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { permissions } = req.body;
+        const permissionsArray = Array.isArray(permissions) ? permissions : [];
+        if (!userId) {
+            res.status(400).json({ message: 'Valid userId required' });
+            return;
+        }
+        // Using raw SQL to bypass Prisma Client strictly typed cache errors
+        await prisma.$executeRaw `UPDATE "User" SET permissions = ${permissionsArray} WHERE id = ${userId}`;
+        const updatedUser = await prisma.$queryRaw `
+      UPDATE "User"
+      SET permissions = ${permissionsArray}
+      WHERE id = ${userId}
+      RETURNING *
+    `;
+        const finalPermissions = updatedUser?.[0]?.permissions || permissionsArray;
+        res.status(200).json({ message: 'Permissions updated successfully', permissions: finalPermissions });
+    }
+    catch (error) {
+        console.error('Error updating user permissions:', error);
+        res.status(500).json({ message: 'Internal server error while linking permissions.' });
+    }
+};
+exports.updateUserPermissions = updateUserPermissions;
 const promoteClass = async (req, res) => {
     try {
         const { departmentId, year } = req.body;
