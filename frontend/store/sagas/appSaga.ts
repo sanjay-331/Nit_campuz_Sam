@@ -385,68 +385,86 @@ function* handleFetchSubmissions() {
 
 function* handleAddUser(action: PayloadAction<Omit<User, 'id' | 'permissions'>>) {
     try {
-        const newUser: User = {
-            ...action.payload,
-            id: generateId('u'),
-            permissions: [], // Default permissions
-        };
-        D.USERS.splice(D.USERS.length, 0, newUser);
-        yield sagaEffects.put(setUsers([...D.USERS]));
-        yield sagaEffects.put(showToast({ type: 'success', message: 'User added successfully.' }));
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'User added successfully.' }));
+            yield sagaEffects.put(fetchUsersRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to add user.');
+        }
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to add user.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to add user.' }));
+        }
     }
 }
 
 function* handleBulkAddUsers(action: PayloadAction<Omit<Student, 'id'|'permissions'|'cgpa'|'sgpa'|'totalWorkingDays'|'daysPresent'|'address'|'photoUrl'|'dues'>[]>) {
     try {
-        const existingRegNos = new Set(D.USERS.map(u => (u as Student).regNo).filter(Boolean));
-        const newUsers: Student[] = [];
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users/bulk`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
 
-        for (const userData of action.payload) {
-            if (!existingRegNos.has(userData.regNo)) {
-                const newStudent: Student = {
-                    ...userData,
-                    id: generateId('u'),
-                    permissions: [],
-                    cgpa: 0,
-                    sgpa: [],
-                    status: StudentStatus.ACTIVE,
-                    dues: { library: false, department: false, accounts: false },
-                };
-                newUsers.push(newStudent);
-                existingRegNos.add(newStudent.regNo);
-            }
+        if (response.ok) {
+            const data: { message: string } = yield sagaEffects.call([response, 'json']);
+            yield sagaEffects.put(showToast({ type: 'success', message: data.message }));
+            yield sagaEffects.put(fetchUsersRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to perform bulk upload.');
         }
-
-        D.USERS.push(...newUsers);
-        yield sagaEffects.put(setUsers([...D.USERS]));
-        yield sagaEffects.put(showToast({ type: 'success', message: `${newUsers.length} new students added successfully.` }));
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to perform bulk user upload.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to perform bulk upload.' }));
+        }
     }
 }
 
 function* handleTransferStudents(action: PayloadAction<{ studentIds: string[], newDepartmentId: string }>) {
     try {
-        const { studentIds, newDepartmentId } = action.payload;
-        
-        const newUsers = D.USERS.map(user => {
-            if (studentIds.includes(user.id) && user.role === UserRole.STUDENT && user.status === StudentStatus.ACTIVE) {
-                return {
-                    ...(user as Student),
-                    departmentId: newDepartmentId,
-                    year: 2,
-                };
-            }
-            return user;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users/transfer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
         });
 
-        D.USERS.splice(0, D.USERS.length, ...newUsers);
-        yield sagaEffects.put(setUsers(newUsers));
-        yield sagaEffects.put(showToast({ type: 'success', message: `${studentIds.length} students transferred successfully.` }));
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Students transferred successfully.' }));
+            yield sagaEffects.put(fetchUsersRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to transfer students.');
+        }
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to transfer students.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to transfer students.' }));
+        }
     }
 }
 
@@ -485,91 +503,114 @@ function* handlePromoteClass(action: PayloadAction<{ departmentId: string; year:
 
 function* handleUpdateUserInList(action: PayloadAction<User>) {
     try {
-        const userIndex = D.USERS.findIndex(u => u.id === action.payload.id);
-        if (userIndex > -1) {
-            D.USERS[userIndex] = action.payload;
-            yield sagaEffects.put(setUsers([...D.USERS]));
+        const { id, ...updates } = action.payload;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(updates),
+        });
+
+        if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'User updated successfully.' }));
+            yield sagaEffects.put(fetchUsersRequest());
         } else {
-            throw new Error("User not found");
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to update user.');
         }
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to update user.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to update user.' }));
+        }
     }
 }
 
 function* handleBulkUpdateUsersStatus(action: PayloadAction<{ userIds: string[], status: 'Active' | 'Inactive' }>) {
     try {
-        const { userIds, status } = action.payload;
-        const newUsers = D.USERS.map(user => {
-            if (userIds.includes(user.id)) {
-                return { ...user, status: status as StudentStatus };
-            }
-            return user;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
         });
-        D.USERS.splice(0, D.USERS.length, ...newUsers);
-        yield sagaEffects.put(setUsers(newUsers));
-        yield sagaEffects.put(showToast({ type: 'success', message: `${userIds.length} users updated to ${status}.` }));
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'User statuses updated.' }));
+            yield sagaEffects.put(fetchUsersRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to update statuses.');
+        }
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to update user statuses.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to update statuses.' }));
+        }
     }
 }
 
 function* handleBulkPromoteStudents(action: PayloadAction<{ userIds: string[] }>) {
     try {
-        const { userIds } = action.payload;
-        const newUsers = D.USERS.map(user => {
-            if (userIds.includes(user.id) && user.role === UserRole.STUDENT && (user as Student | Alumnus).status !== StudentStatus.ALUMNI) {
-                const student = user as Student;
-                if (student.year < 4) {
-                    return { ...student, year: student.year + 1 };
-                } else {
-                    const alumnus: Alumnus = {
-                        id: student.id,
-                        name: student.name,
-                        email: student.email,
-                        role: student.role,
-                        departmentId: student.departmentId,
-                        status: StudentStatus.ALUMNI,
-                        phone: student.phone,
-                        address: student.address,
-                        photoUrl: student.photoUrl,
-                        permissions: student.permissions,
-                        regNo: student.regNo,
-                        section: student.section,
-                        admissionYear: student.admissionYear,
-                        year: student.year,
-                        cgpa: student.cgpa,
-                        sgpa: student.sgpa,
-                        graduationYear: new Date().getFullYear(),
-                        finalCgpa: student.cgpa,
-                        dues: { library: true, department: true, accounts: true },
-                    };
-                    return alumnus;
-                }
-            }
-            return user;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users/bulk-promote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
         });
 
-        D.USERS.splice(0, D.USERS.length, ...newUsers);
-        yield sagaEffects.put(setUsers(newUsers));
-        yield sagaEffects.put(showToast({ type: 'success', message: `${userIds.length} students promoted.` }));
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Students promoted successfully.' }));
+            yield sagaEffects.put(fetchUsersRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to promote students.');
+        }
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to promote students.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to promote students.' }));
+        }
     }
 }
 
 
 function* handleRemoveUser(action: PayloadAction<string>) {
     try {
-        const userIndex = D.USERS.findIndex(u => u.id === action.payload);
-        if (userIndex > -1) {
-            D.USERS.splice(userIndex, 1);
+        const id = action.payload;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'User removed successfully.' }));
+            yield sagaEffects.put(fetchUsersRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to remove user.');
         }
-        yield sagaEffects.put(setUsers([...D.USERS]));
-        yield sagaEffects.put(showToast({ type: 'success', message: 'User removed successfully.' }));
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to remove user.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to remove user.' }));
+        }
     }
 }
 
@@ -617,69 +658,96 @@ function* handleUpdateUserPermissions(action: PayloadAction<{ userId: string; pe
 
 function* handleAddDepartment(action: PayloadAction<string>) {
     try {
-        const newDept: Department = { id: generateId('d'), name: action.payload };
-        D.DEPARTMENTS.splice(D.DEPARTMENTS.length, 0, newDept);
-        yield sagaEffects.put(setDepartments([...D.DEPARTMENTS]));
-        yield sagaEffects.put(showToast({ type: 'success', message: 'Department created successfully.' }));
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/departments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name: action.payload }),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Department created successfully.' }));
+            yield sagaEffects.put(fetchDepartmentsRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to create department.');
+        }
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to create department.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to create department.' }));
+        }
     }
 }
 
 function* handleAssignHOD(action: PayloadAction<{ deptId: string; staffId: string } | { deptId: string; newUser: { name: string; email: string; contact?: string } }>) {
     try {
-        const { deptId } = action.payload;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         
-        // Demote the old HOD first
-        const oldHOD = D.USERS.find(u => u.departmentId === deptId && u.role === UserRole.HOD);
-        if (oldHOD) {
-            oldHOD.role = UserRole.STAFF;
+        let body;
+        if ('staffId' in action.payload) {
+            body = action.payload;
+        } else {
+            // Simplified: for now only handle existing staff assignment
+            // In a real app we'd create the user first
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Creating new user during HOD assignment not implemented yet.' }));
+            return;
         }
 
-        if ('staffId' in action.payload) { // Assign existing staff
-            const { staffId } = action.payload;
-            const newHOD = D.USERS.find(u => u.id === staffId);
-            if (newHOD) {
-                newHOD.role = UserRole.HOD;
-            }
-        } else { // Create and assign new staff as HOD
-            const { newUser } = action.payload;
-            const newHOD: Staff = {
-                id: generateId('u'),
-                name: newUser.name,
-                email: newUser.email,
-                phone: newUser.contact,
-                role: UserRole.HOD,
-                departmentId: deptId,
-                status: StudentStatus.ACTIVE,
-                permissions: [Permission.VIEW_USERS],
-            };
-            D.USERS.splice(D.USERS.length, 0, newHOD);
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/assign-hod`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(body),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'HOD assigned successfully.' }));
+            yield sagaEffects.put(fetchUsersRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to assign HOD.');
         }
-        
-        yield sagaEffects.put(setUsers([...D.USERS]));
-        yield sagaEffects.put(showToast({ type: 'success', message: 'HOD assigned successfully.' }));
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to assign HOD.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to assign HOD.' }));
+        }
     }
 }
 
 function* handleAssignAdvisor(action: PayloadAction<{ departmentId: string; year: number; advisorId: string }>) {
     try {
-        const { departmentId, year, advisorId } = action.payload;
-        const classIndex = D.CLASSES.findIndex(c => c.departmentId === departmentId && c.year === year);
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/assign-advisor`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
 
-        if (classIndex > -1) {
-            D.CLASSES[classIndex].advisorId = advisorId;
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Class advisor assigned successfully.' }));
+            // Note: Classes don't have a fetch action yet, but we update them locally or wait for reload
         } else {
-            const newAssignment: ClassInDepartment = { departmentId, year, advisorId };
-            D.CLASSES.splice(D.CLASSES.length, 0, newAssignment);
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to assign class advisor.');
         }
-
-        yield sagaEffects.put(setClasses([...D.CLASSES]));
-        yield sagaEffects.put(showToast({ type: 'success', message: 'Class advisor assigned successfully.' }));
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to assign class advisor.' }));
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to assign class advisor.' }));
+        }
     }
 }
 
@@ -805,37 +873,29 @@ function* handleAddAssignment(action: PayloadAction<Omit<Assignment, 'id' | 'sub
 
 function* handleBulkAssignTopics(action: PayloadAction<{ courseId: string; assignments: { studentId: string, topic: string, remarks?: string }[] }>) {
     try {
-        const { assignments } = action.payload;
-
-        assignments.forEach(({ studentId, topic, remarks }) => {
-            // This is a simplified logic. A real app might need to find a specific assignment ID.
-            // For now, let's assume this updates a 'topic' on the submission record.
-            const submission = D.SUBMISSIONS.find(s => s.studentId === studentId); // Simplified find
-            if (submission) {
-                submission.topic = topic;
-                submission.remarks = remarks;
-            } else {
-                // This scenario needs more context, e.g., which assignment are we assigning to?
-                // For the demo, we'll assume a single assignment per course for simplicity.
-                const assignment = D.ASSIGNMENTS.find(a => a.courseId === action.payload.courseId);
-                if (assignment) {
-                     const newSubmission: StudentSubmission = {
-                        assignmentId: assignment.id,
-                        studentId: studentId,
-                        submittedAt: new Date().toISOString(),
-                        status: 'Not Submitted',
-                        topic: topic,
-                        remarks: remarks,
-                    };
-                    D.SUBMISSIONS.push(newSubmission);
-                }
-            }
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/assignments/bulk-assign-topics`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
         });
-        
-        yield sagaEffects.put(setSubmissions([...D.SUBMISSIONS]));
-        yield sagaEffects.put(showToast({ type: 'success', message: 'Topics assigned successfully.' }));
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Topics assigned successfully.' }));
+            yield sagaEffects.put(fetchSubmissionsRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to assign topics.');
+        }
     } catch (error) {
-        yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to assign topics.' }));
+         if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to assign topics.' }));
+        }
     }
 }
 

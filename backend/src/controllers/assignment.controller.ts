@@ -129,3 +129,46 @@ export const gradeSubmission = async (req: Request, res: Response): Promise<void
     }
   };
   
+
+export const bulkAssignTopics = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { courseId, assignments } = req.body;
+        
+        const results = [];
+        for (const item of assignments) {
+            const { studentId, topic, remarks } = item;
+            
+            // Find existing submission for any assignment in this course
+            const assignment = await prisma.assignment.findFirst({ where: { courseId } });
+            if (!assignment) continue;
+
+            const existing = await prisma.submission.findFirst({
+                where: { assignmentId: assignment.id, studentId }
+            });
+
+            if (existing) {
+                const updated = await prisma.submission.update({
+                    where: { id: existing.id },
+                    data: { topic, remarks }
+                });
+                results.push(updated);
+            } else {
+                const created = await prisma.submission.create({
+                    data: {
+                        assignmentId: assignment.id,
+                        studentId,
+                        topic,
+                        remarks,
+                        status: 'Not Submitted'
+                    }
+                });
+                results.push(created);
+            }
+        }
+
+        res.json({ message: `Successfully assigned topics to ${results.length} students`, data: results });
+    } catch (error) {
+        console.error('Error bulk assigning topics:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};

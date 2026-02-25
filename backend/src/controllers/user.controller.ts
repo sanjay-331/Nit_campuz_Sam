@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
-import { UserRole, StudentStatus } from '@prisma/client';
+import { UserRole, StudentStatus, User } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -146,4 +147,237 @@ export const promoteClass = async (req: Request, res: Response): Promise<void> =
     console.error('Error promoting class:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+export const createUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, email, role, departmentId, status, password, ...profileData } = req.body;
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      res.status(400).json({ message: 'User with this email already exists' });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password || 'password123', 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        departmentId: departmentId || null,
+        status: status || StudentStatus.ACTIVE,
+        permissions: [] 
+      }
+    });
+
+    if (role === UserRole.STUDENT) {
+       await prisma.studentProfile.create({
+         data: {
+           userId: newUser.id,
+           regNo: profileData.regNo || `REG-${newUser.id.substring(0, 8)}`,
+           section: profileData.section || 'A',
+           admissionYear: Number(profileData.admissionYear) || new Date().getFullYear(),
+           year: Number(profileData.year) || 1,
+           cgpa: 0.0
+         }
+       });
+       
+       // Also create Dues record
+       await prisma.dues.create({
+          data: {
+            studentId: newUser.id,
+            library: false,
+            department: false,
+            accounts: false
+          }
+       });
+    }
+
+    res.status(201).json(newUser);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const bulkCreateUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const usersData = req.body;
+    if (!Array.isArray(usersData)) {
+      res.status(400).json({ message: 'Invalid data format' });
+      return;
+    }
+
+    const createdUsers = [];
+    const defaultPassword = await bcrypt.hash('password123', 10);
+
+    for (const data of usersData) {
+      const { name, email, role, departmentId, status, ...profileData } = data;
+      
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) continue;
+
+      const newUser = await prisma.user.create({
+        data: {
+          name,
+          email,
+          password: defaultPassword,
+          role: role || UserRole.STUDENT,
+          departmentId,
+          status: status || StudentStatus.ACTIVE,
+          permissions: []
+        }
+      });
+
+      if (role === UserRole.STUDENT) {
+        await prisma.studentProfile.create({
+          data: {
+            userId: newUser.id,
+            regNo: profileData.regNo,
+            section: profileData.section || 'A',
+            admissionYear: Number(profileData.admissionYear) || new Date().getFullYear(),
+            year: Number(profileData.year) || 1,
+            cgpa: 0.0
+          }
+        });
+        
+        await prisma.dues.create({
+          data: {
+            studentId: newUser.id,
+            library: false,
+            department: false,
+            accounts: false
+          }
+        });
+      }
+      createdUsers.push(newUser);
+    }
+
+    res.status(201).json({ message: `${createdUsers.length} users created successfully`, count: createdUsers.length });
+  } catch (error) {
+    console.error('Error bulk creating users:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params as { id: string };
+    const { name, email, role, departmentId, status } = req.body;
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        name,
+        email,
+        role: role as UserRole,
+        departmentId,
+        status: status as StudentStatus
+      }
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const removeUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params as { id: string };
+        
+        // Delete related profiles first
+        await prisma.studentProfile.deleteMany({ where: { userId: id } });
+        await prisma.alumniProfile.deleteMany({ where: { userId: id } });
+        await prisma.dues.deleteMany({ where: { studentId: id } });
+        await prisma.noDuesCertificate.deleteMany({ where: { studentId: id } });
+        
+        await prisma.user.delete({ where: { id } });
+        res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error removing user:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const updateUsersStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userIds, status } = req.body;
+        await prisma.user.updateMany({
+            where: { id: { in: userIds } },
+            data: { status }
+        });
+        res.json({ message: `Successfully updated ${userIds.length} users' status to ${status}` });
+    } catch (error) {
+        console.error('Error updating users status:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const transferStudents = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { studentIds, newDepartmentId } = req.body;
+        await prisma.user.updateMany({
+            where: { id: { in: studentIds } },
+            data: { departmentId: newDepartmentId }
+        });
+        res.json({ message: `Successfully transferred ${studentIds.length} students` });
+    } catch (error) {
+        console.error('Error transferring students:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const bulkPromoteStudents = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userIds } = req.body;
+        
+        const students = await prisma.user.findMany({
+            where: { id: { in: userIds }, role: UserRole.STUDENT },
+            include: { studentProfile: true }
+        });
+
+        for (const student of students) {
+            if (!student.studentProfile) continue;
+
+            if (student.studentProfile.year < 4) {
+                await prisma.studentProfile.update({
+                    where: { id: student.studentProfile.id },
+                    data: { year: student.studentProfile.year + 1 }
+                });
+            } else {
+                // Graduate
+                await prisma.alumniProfile.create({
+                    data: {
+                        userId: student.id,
+                        regNo: student.studentProfile.regNo,
+                        section: student.studentProfile.section,
+                        admissionYear: student.studentProfile.admissionYear,
+                        year: 4,
+                        cgpa: student.studentProfile.cgpa,
+                        graduationYear: new Date().getFullYear(),
+                        finalCgpa: student.studentProfile.cgpa
+                    }
+                });
+
+                await prisma.user.update({
+                    where: { id: student.id },
+                    data: { status: StudentStatus.ALUMNI }
+                });
+
+                await prisma.studentProfile.delete({
+                    where: { id: student.studentProfile.id }
+                });
+            }
+        }
+
+        res.json({ message: `Successfully promoted ${students.length} students` });
+    } catch (error) {
+        console.error('Error promoting students:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 };

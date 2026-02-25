@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
+import { UserRole } from '@prisma/client';
 
 const calculateGradeAndPoints = (internal: number, exam: number): { grade: string, gradePoint: number } => {
     const total = internal + (exam / 2); // Total out of 100
@@ -226,6 +227,93 @@ export const createExamSchedule = async (req: Request, res: Response): Promise<v
             data: { courseCode, courseName, date, time, duration, hall }
         });
         res.json(newSchedule);
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const createDepartment = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { name } = req.body;
+        if (!name) {
+            res.status(400).json({ message: 'Department name is required' });
+            return;
+        }
+        const department = await prisma.department.create({ data: { name } });
+        res.status(201).json(department);
+    } catch (error) {
+        console.error('Error creating department:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const createCourse = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { name, code, staffId, departmentId, credits, semester } = req.body;
+        const course = await prisma.course.create({
+            data: { name, code, staffId, departmentId, credits: Number(credits), semester: Number(semester) }
+        });
+        res.status(201).json(course);
+    } catch (error) {
+        console.error('Error creating course:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const assignHOD = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { deptId, staffId } = req.body;
+        
+        // Demote old HOD
+        await prisma.user.updateMany({
+            where: { departmentId: deptId, role: UserRole.HOD },
+            data: { role: UserRole.STAFF }
+        });
+
+        // Promote new HOD
+        const updatedUser = await prisma.user.update({
+            where: { id: staffId },
+            data: { role: UserRole.HOD }
+        });
+
+        res.json(updatedUser);
+    } catch (error) {
+        console.error('Error assigning HOD:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const assignAdvisor = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { departmentId, year, advisorId } = req.body;
+        
+        const existingClass = await prisma.class.findFirst({
+            where: { departmentId, year: Number(year) }
+        });
+
+        let updatedClass;
+        if (existingClass) {
+            updatedClass = await prisma.class.update({
+                where: { id: existingClass.id },
+                data: { advisorId }
+            });
+        } else {
+            updatedClass = await prisma.class.create({
+                data: { departmentId, year: Number(year), advisorId }
+            });
+        }
+
+        res.json(updatedClass);
+    } catch (error) {
+        console.error('Error assigning advisor:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const getClasses = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const classes = await prisma.class.findMany();
+        res.json(classes);
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
     }
