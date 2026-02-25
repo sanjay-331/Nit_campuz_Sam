@@ -161,19 +161,23 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
 
     const hashedPassword = await bcrypt.hash(password || 'password123', 10);
 
+    // Normalize role and status for Prisma enums (usually uppercase)
+    const prismaRole = (role as string || UserRole.STUDENT).toUpperCase() as UserRole;
+    const prismaStatus = (status as string || 'ACTIVE').toUpperCase() as StudentStatus;
+
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role,
-        departmentId: departmentId || null,
-        status: status || StudentStatus.ACTIVE,
+        role: prismaRole,
+        departmentId: departmentId && departmentId !== '' ? departmentId : null,
+        status: prismaStatus,
         permissions: [] 
       }
     });
 
-    if (role === UserRole.STUDENT) {
+    if (prismaRole === UserRole.STUDENT) {
        await prisma.studentProfile.create({
          data: {
            userId: newUser.id,
@@ -199,7 +203,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     res.status(201).json(newUser);
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 
@@ -220,19 +224,22 @@ export const bulkCreateUsers = async (req: Request, res: Response): Promise<void
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) continue;
 
+      const prismaRole = (role as string || UserRole.STUDENT).toUpperCase() as UserRole;
+      const prismaStatus = (status as string || 'ACTIVE').toUpperCase() as StudentStatus;
+
       const newUser = await prisma.user.create({
         data: {
           name,
           email,
           password: defaultPassword,
-          role: role || UserRole.STUDENT,
-          departmentId,
-          status: status || StudentStatus.ACTIVE,
+          role: prismaRole,
+          departmentId: departmentId && departmentId !== '' ? departmentId : null,
+          status: prismaStatus,
           permissions: []
         }
       });
 
-      if (role === UserRole.STUDENT) {
+      if (prismaRole === UserRole.STUDENT) {
         await prisma.studentProfile.create({
           data: {
             userId: newUser.id,
@@ -259,7 +266,7 @@ export const bulkCreateUsers = async (req: Request, res: Response): Promise<void
     res.status(201).json({ message: `${createdUsers.length} users created successfully`, count: createdUsers.length });
   } catch (error) {
     console.error('Error bulk creating users:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 
@@ -268,21 +275,24 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
     const { id } = req.params as { id: string };
     const { name, email, role, departmentId, status } = req.body;
 
+    const prismaRole = role ? (role as string).toUpperCase() as UserRole : undefined;
+    const prismaStatus = status ? (status as string).toUpperCase() as StudentStatus : undefined;
+
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
         name,
         email,
-        role: role as UserRole,
-        departmentId,
-        status: status as StudentStatus
+        role: prismaRole,
+        departmentId: departmentId && departmentId !== '' ? departmentId : (departmentId === '' ? null : undefined),
+        status: prismaStatus
       }
     });
 
     res.json(updatedUser);
   } catch (error) {
       console.error('Error updating user:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 };
 
@@ -305,17 +315,21 @@ export const removeUser = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const updateUsersStatus = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { userIds, status } = req.body;
-        await prisma.user.updateMany({
-            where: { id: { in: userIds } },
-            data: { status }
-        });
-        res.json({ message: `Successfully updated ${userIds.length} users' status to ${status}` });
-    } catch (error) {
-        console.error('Error updating users status:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
+  try {
+    const { userIds, status } = req.body;
+
+    const prismaStatus = (status as string || 'ACTIVE').toUpperCase() as StudentStatus;
+
+    await prisma.user.updateMany({
+      where: { id: { in: userIds } },
+      data: { status: prismaStatus }
+    });
+
+    res.json({ message: 'Users status updated successfully' });
+  } catch (error) {
+    console.error('Error updating users status:', error);
+    res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
+  }
 };
 
 export const transferStudents = async (req: Request, res: Response): Promise<void> => {
