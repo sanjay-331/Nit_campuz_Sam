@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../db';
 import { UserRole } from '@prisma/client';
 
 export const getAllTutors = async (req: Request, res: Response): Promise<void> => {

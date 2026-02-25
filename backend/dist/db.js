@@ -1,0 +1,22 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.prisma = void 0;
+const client_1 = require("@prisma/client");
+const adapter_pg_1 = require("@prisma/adapter-pg");
+const pg_1 = require("pg");
+const dotenv_1 = __importDefault(require("dotenv"));
+console.log('DB.ts: Loading dotenv...');
+dotenv_1.default.config();
+console.log('DB.ts: DATABASE_URL is', process.env.DATABASE_URL ? 'PRESENT' : 'MISSING');
+const connectionString = process.env.DATABASE_URL;
+console.log('DB.ts: Creating Pool...');
+const pool = new pg_1.Pool({ connectionString });
+console.log('DB.ts: Creating Adapter...');
+const adapter = new adapter_pg_1.PrismaPg(pool);
+console.log('DB.ts: Initializing Prisma...');
+const prisma = new client_1.PrismaClient({ adapter });
+exports.prisma = prisma;
+console.log('DB.ts: Exporting Prisma...');

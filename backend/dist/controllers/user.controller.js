@@ -1,16 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.promoteClass = exports.updateUserPermissions = exports.getAllUsers = void 0;
+const db_1 = require("../db");
 const client_1 = require("@prisma/client");
-const adapter_pg_1 = require("@prisma/adapter-pg");
-const pg_1 = require("pg");
-const connectionString = process.env.DATABASE_URL;
-const pool = new pg_1.Pool({ connectionString });
-const adapter = new adapter_pg_1.PrismaPg(pool);
-const prisma = new client_1.PrismaClient({ adapter });
 const getAllUsers = async (req, res) => {
     try {
-        const users = await prisma.user.findMany({
+        const users = await db_1.prisma.user.findMany({
             include: {
                 department: true,
                 studentProfile: true,
@@ -52,8 +47,8 @@ const updateUserPermissions = async (req, res) => {
             return;
         }
         // Using raw SQL to bypass Prisma Client strictly typed cache errors
-        await prisma.$executeRaw `UPDATE "User" SET permissions = ${permissionsArray} WHERE id = ${userId}`;
-        const updatedUser = await prisma.$queryRaw `
+        await db_1.prisma.$executeRaw `UPDATE "User" SET permissions = ${permissionsArray} WHERE id = ${userId}`;
+        const updatedUser = await db_1.prisma.$queryRaw `
       UPDATE "User"
       SET permissions = ${permissionsArray}
       WHERE id = ${userId}
@@ -76,7 +71,7 @@ const promoteClass = async (req, res) => {
             return;
         }
         // Find all students in that department and year
-        const studentsToPromote = await prisma.user.findMany({
+        const studentsToPromote = await db_1.prisma.user.findMany({
             where: {
                 role: client_1.UserRole.STUDENT,
                 departmentId,
@@ -99,7 +94,7 @@ const promoteClass = async (req, res) => {
                 if (!student.studentProfile)
                     continue;
                 // Create Alumni Profile
-                await prisma.alumniProfile.create({
+                await db_1.prisma.alumniProfile.create({
                     data: {
                         userId: student.id,
                         regNo: student.studentProfile.regNo,
@@ -112,19 +107,19 @@ const promoteClass = async (req, res) => {
                     }
                 });
                 // Update user status
-                await prisma.user.update({
+                await db_1.prisma.user.update({
                     where: { id: student.id },
                     data: { status: client_1.StudentStatus.ALUMNI }
                 });
                 // We keep the student profile or delete it depending on design. Let's delete it so there's no overlap.
-                await prisma.studentProfile.delete({
+                await db_1.prisma.studentProfile.delete({
                     where: { userId: student.id }
                 });
             }
         }
         else {
             // Increase Year by 1
-            await prisma.studentProfile.updateMany({
+            await db_1.prisma.studentProfile.updateMany({
                 where: {
                     year: Number(year),
                     user: { departmentId: departmentId, status: client_1.StudentStatus.ACTIVE }

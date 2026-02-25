@@ -1,13 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createExamSchedule = exports.getAllExamSchedules = exports.createMaterial = exports.getAllMaterials = exports.getAllAttendance = exports.getAllMarks = exports.getAllDepartments = exports.getAllCourses = exports.submitAttendance = exports.saveMarks = void 0;
-const client_1 = require("@prisma/client");
-const adapter_pg_1 = require("@prisma/adapter-pg");
-const pg_1 = require("pg");
-const connectionString = process.env.DATABASE_URL;
-const pool = new pg_1.Pool({ connectionString });
-const adapter = new adapter_pg_1.PrismaPg(pool);
-const prisma = new client_1.PrismaClient({ adapter });
+const db_1 = require("../db");
 const calculateGradeAndPoints = (internal, exam) => {
     const total = internal + (exam / 2); // Total out of 100
     if (total >= 91)
@@ -31,7 +25,7 @@ const saveMarks = async (req, res) => {
             res.status(400).json({ message: 'courseId and marks object required' });
             return;
         }
-        const course = await prisma.course.findUnique({ where: { id: courseId } });
+        const course = await db_1.prisma.course.findUnique({ where: { id: courseId } });
         if (!course) {
             res.status(404).json({ message: 'Course not found' });
             return;
@@ -44,11 +38,11 @@ const saveMarks = async (req, res) => {
             if (typedMarks.internal !== undefined && typedMarks.exam !== undefined) {
                 const { grade, gradePoint } = calculateGradeAndPoints(typedMarks.internal, typedMarks.exam);
                 // Upsert Marks
-                const existingMark = await prisma.mark.findFirst({
+                const existingMark = await db_1.prisma.mark.findFirst({
                     where: { courseId, studentId }
                 });
                 if (existingMark) {
-                    await prisma.mark.update({
+                    await db_1.prisma.mark.update({
                         where: { id: existingMark.id },
                         data: {
                             internal: typedMarks.internal,
@@ -59,7 +53,7 @@ const saveMarks = async (req, res) => {
                     });
                 }
                 else {
-                    await prisma.mark.create({
+                    await db_1.prisma.mark.create({
                         data: {
                             courseId,
                             studentId,
@@ -76,7 +70,7 @@ const saveMarks = async (req, res) => {
         }
         // Recalculate CGPA for all updated students
         for (const studentId of Array.from(updatedStudentIds)) {
-            const allMarks = await prisma.mark.findMany({
+            const allMarks = await db_1.prisma.mark.findMany({
                 where: { studentId },
                 include: { course: true }
             });
@@ -89,7 +83,7 @@ const saveMarks = async (req, res) => {
                 }
             }
             const newCgpa = totalCredits > 0 ? (totalWeightedPoints / totalCredits) : 0;
-            await prisma.studentProfile.updateMany({
+            await db_1.prisma.studentProfile.updateMany({
                 where: { userId: studentId },
                 data: { cgpa: newCgpa }
             });
@@ -112,7 +106,7 @@ const submitAttendance = async (req, res) => {
         const date = new Date();
         // records is an object: { "student1_id": true, "student2_id": false }
         const attendancePromises = Object.entries(records).map(([studentId, present]) => {
-            return prisma.attendance.create({
+            return db_1.prisma.attendance.create({
                 data: {
                     courseId,
                     studentId,
@@ -132,7 +126,7 @@ const submitAttendance = async (req, res) => {
 exports.submitAttendance = submitAttendance;
 const getAllCourses = async (req, res) => {
     try {
-        const courses = await prisma.course.findMany();
+        const courses = await db_1.prisma.course.findMany();
         res.json(courses);
     }
     catch (error) {
@@ -142,7 +136,7 @@ const getAllCourses = async (req, res) => {
 exports.getAllCourses = getAllCourses;
 const getAllDepartments = async (req, res) => {
     try {
-        const departments = await prisma.department.findMany();
+        const departments = await db_1.prisma.department.findMany();
         res.json(departments);
     }
     catch (error) {
@@ -152,7 +146,7 @@ const getAllDepartments = async (req, res) => {
 exports.getAllDepartments = getAllDepartments;
 const getAllMarks = async (req, res) => {
     try {
-        const marks = await prisma.mark.findMany({
+        const marks = await db_1.prisma.mark.findMany({
             include: { course: true }
         });
         res.json(marks);
@@ -164,7 +158,7 @@ const getAllMarks = async (req, res) => {
 exports.getAllMarks = getAllMarks;
 const getAllAttendance = async (req, res) => {
     try {
-        const attendance = await prisma.attendance.findMany({
+        const attendance = await db_1.prisma.attendance.findMany({
             include: { course: true }
         });
         res.json(attendance);
@@ -176,7 +170,7 @@ const getAllAttendance = async (req, res) => {
 exports.getAllAttendance = getAllAttendance;
 const getAllMaterials = async (req, res) => {
     try {
-        const materials = await prisma.material.findMany({
+        const materials = await db_1.prisma.material.findMany({
             include: { course: true }
         });
         res.json(materials);
@@ -193,7 +187,7 @@ const createMaterial = async (req, res) => {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        const newMaterial = await prisma.material.create({
+        const newMaterial = await db_1.prisma.material.create({
             data: { courseId, title, type, url }
         });
         res.json(newMaterial);
@@ -205,7 +199,7 @@ const createMaterial = async (req, res) => {
 exports.createMaterial = createMaterial;
 const getAllExamSchedules = async (req, res) => {
     try {
-        const schedules = await prisma.examSchedule.findMany();
+        const schedules = await db_1.prisma.examSchedule.findMany();
         res.json(schedules);
     }
     catch (error) {
@@ -220,7 +214,7 @@ const createExamSchedule = async (req, res) => {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        const newSchedule = await prisma.examSchedule.create({
+        const newSchedule = await db_1.prisma.examSchedule.create({
             data: { courseCode, courseName, date, time, duration, hall }
         });
         res.json(newSchedule);

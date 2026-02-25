@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createRemark = exports.getAllRemarks = exports.updateMentorAssignment = exports.autoAssignMentees = exports.getAllMentorAssignments = void 0;
-const index_1 = require("../index");
+const db_1 = require("../db");
 const client_1 = require("@prisma/client");
 const getAllMentorAssignments = async (req, res) => {
     try {
-        const assignments = await index_1.prisma.mentorAssignment.findMany();
+        const assignments = await db_1.prisma.mentorAssignment.findMany();
         res.json(assignments);
     }
     catch (error) {
@@ -20,10 +20,10 @@ const autoAssignMentees = async (req, res) => {
             res.status(400).json({ message: 'Missing departmentId' });
             return;
         }
-        const deptFaculty = await index_1.prisma.user.findMany({
+        const deptFaculty = await db_1.prisma.user.findMany({
             where: { departmentId, role: client_1.UserRole.STAFF }
         });
-        const deptStudents = await index_1.prisma.user.findMany({
+        const deptStudents = await db_1.prisma.user.findMany({
             where: { departmentId, role: client_1.UserRole.STUDENT }
         });
         if (deptFaculty.length === 0) {
@@ -32,7 +32,7 @@ const autoAssignMentees = async (req, res) => {
         }
         // Delete existing assignments for students in this department
         const studentIds = deptStudents.map((s) => s.id);
-        await index_1.prisma.mentorAssignment.deleteMany({
+        await db_1.prisma.mentorAssignment.deleteMany({
             where: { studentId: { in: studentIds } }
         });
         const newAssignmentsData = [];
@@ -44,11 +44,11 @@ const autoAssignMentees = async (req, res) => {
             });
             facultyIndex = (facultyIndex + 1) % deptFaculty.length;
         }
-        await index_1.prisma.mentorAssignment.createMany({
+        await db_1.prisma.mentorAssignment.createMany({
             data: newAssignmentsData
         });
         // Return updated assignments
-        const allAssignments = await index_1.prisma.mentorAssignment.findMany();
+        const allAssignments = await db_1.prisma.mentorAssignment.findMany();
         res.json({ message: 'Mentees have been auto-assigned.', assignments: allAssignments });
     }
     catch (error) {
@@ -63,7 +63,7 @@ const updateMentorAssignment = async (req, res) => {
             res.status(400).json({ message: 'Missing studentId or newMentorId' });
             return;
         }
-        const assignment = await index_1.prisma.mentorAssignment.upsert({
+        const assignment = await db_1.prisma.mentorAssignment.upsert({
             where: { studentId },
             update: { mentorId: newMentorId },
             create: { studentId, mentorId: newMentorId }
@@ -77,7 +77,7 @@ const updateMentorAssignment = async (req, res) => {
 exports.updateMentorAssignment = updateMentorAssignment;
 const getAllRemarks = async (req, res) => {
     try {
-        const remarks = await index_1.prisma.remark.findMany();
+        const remarks = await db_1.prisma.remark.findMany();
         res.json(remarks);
     }
     catch (error) {
@@ -92,7 +92,7 @@ const createRemark = async (req, res) => {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        const newRemark = await index_1.prisma.remark.create({
+        const newRemark = await db_1.prisma.remark.create({
             data: { studentId, mentorId, text }
         });
         res.json(newRemark);

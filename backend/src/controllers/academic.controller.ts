@@ -1,12 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
-
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+import { prisma } from '../db';
 
 const calculateGradeAndPoints = (internal: number, exam: number): { grade: string, gradePoint: number } => {
     const total = internal + (exam / 2); // Total out of 100

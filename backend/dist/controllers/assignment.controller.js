@@ -1,16 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.gradeSubmission = exports.submitAssignment = exports.getAllSubmissions = exports.createAssignment = exports.getAllAssignments = void 0;
-const client_1 = require("@prisma/client");
-const adapter_pg_1 = require("@prisma/adapter-pg");
-const pg_1 = require("pg");
-const connectionString = process.env.DATABASE_URL;
-const pool = new pg_1.Pool({ connectionString });
-const adapter = new adapter_pg_1.PrismaPg(pool);
-const prisma = new client_1.PrismaClient({ adapter });
+const db_1 = require("../db");
 const getAllAssignments = async (req, res) => {
     try {
-        const assignments = await prisma.assignment.findMany();
+        const assignments = await db_1.prisma.assignment.findMany();
         res.json(assignments);
     }
     catch (error) {
@@ -26,7 +20,7 @@ const createAssignment = async (req, res) => {
             res.status(400).json({ message: 'courseId, title, and dueDate are required' });
             return;
         }
-        const assignment = await prisma.assignment.create({
+        const assignment = await db_1.prisma.assignment.create({
             data: {
                 courseId,
                 title,
@@ -43,7 +37,7 @@ const createAssignment = async (req, res) => {
 exports.createAssignment = createAssignment;
 const getAllSubmissions = async (req, res) => {
     try {
-        const submissions = await prisma.submission.findMany();
+        const submissions = await db_1.prisma.submission.findMany();
         // Rename id to match frontend if needed, or just let frontend use assignmentId & studentId
         res.json(submissions);
     }
@@ -62,12 +56,12 @@ const submitAssignment = async (req, res) => {
             return;
         }
         // Check if submission exists
-        const existing = await prisma.submission.findFirst({
+        const existing = await db_1.prisma.submission.findFirst({
             where: { assignmentId: String(assignmentId), studentId: String(studentId) }
         });
         let submission;
         if (existing) {
-            submission = await prisma.submission.update({
+            submission = await db_1.prisma.submission.update({
                 where: { id: existing.id },
                 data: {
                     fileUrl,
@@ -80,7 +74,7 @@ const submitAssignment = async (req, res) => {
             });
         }
         else {
-            submission = await prisma.submission.create({
+            submission = await db_1.prisma.submission.create({
                 data: {
                     assignmentId,
                     studentId,
@@ -108,14 +102,14 @@ const gradeSubmission = async (req, res) => {
             res.status(400).json({ message: 'assignmentId, studentId, and grade are required' });
             return;
         }
-        const existing = await prisma.submission.findFirst({
+        const existing = await db_1.prisma.submission.findFirst({
             where: { assignmentId: String(assignmentId), studentId: String(studentId) }
         });
         if (!existing) {
             res.status(404).json({ message: 'Submission not found' });
             return;
         }
-        const submission = await prisma.submission.update({
+        const submission = await db_1.prisma.submission.update({
             where: { id: existing.id },
             data: {
                 grade,

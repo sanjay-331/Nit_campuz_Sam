@@ -4,15 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.login = void 0;
-const client_1 = require("@prisma/client");
-const adapter_pg_1 = require("@prisma/adapter-pg");
-const pg_1 = require("pg");
+const db_1 = require("../db");
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const jwt_simple_1 = __importDefault(require("jwt-simple")); // We'll install this shortly
-const connectionString = process.env.DATABASE_URL;
-const pool = new pg_1.Pool({ connectionString });
-const adapter = new adapter_pg_1.PrismaPg(pool);
-const prisma = new client_1.PrismaClient({ adapter });
+const jwt_simple_1 = __importDefault(require("jwt-simple"));
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -20,7 +14,7 @@ const login = async (req, res) => {
             res.status(400).json({ message: 'Email and password are required' });
             return;
         }
-        const user = await prisma.user.findUnique({
+        const user = await db_1.prisma.user.findUnique({
             where: { email },
             include: {
                 department: true,

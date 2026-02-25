@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.issueNoDuesCertificate = exports.updateDuesStatus = exports.getDuesAndCertificates = exports.updateODApplication = exports.processODApplication = exports.applyForOD = exports.getAllOnDutyApplications = void 0;
-const index_1 = require("../index");
+const db_1 = require("../db");
 const client_1 = require("@prisma/client");
 const getAllOnDutyApplications = async (req, res) => {
     try {
-        const applications = await index_1.prisma.onDutyApplication.findMany();
+        const applications = await db_1.prisma.onDutyApplication.findMany();
         res.json(applications);
     }
     catch (error) {
@@ -16,7 +16,7 @@ exports.getAllOnDutyApplications = getAllOnDutyApplications;
 const applyForOD = async (req, res) => {
     try {
         const { applicantId, reason, fromDate, toDate, type } = req.body;
-        const applicant = await index_1.prisma.user.findUnique({ where: { id: applicantId } });
+        const applicant = await db_1.prisma.user.findUnique({ where: { id: applicantId } });
         if (!applicant) {
             res.status(404).json({ message: 'Applicant not found' });
             return;
@@ -28,7 +28,7 @@ const applyForOD = async (req, res) => {
         else if (applicant.role === client_1.UserRole.HOD) {
             initialStatus = 'Pending Principal';
         }
-        const newApplication = await index_1.prisma.onDutyApplication.create({
+        const newApplication = await db_1.prisma.onDutyApplication.create({
             data: {
                 applicantId,
                 reason,
@@ -55,12 +55,12 @@ const processODApplication = async (req, res) => {
             res.status(401).json({ message: 'Unauthorized' });
             return;
         }
-        const app = await index_1.prisma.onDutyApplication.findUnique({ where: { id } });
+        const app = await db_1.prisma.onDutyApplication.findUnique({ where: { id } });
         if (!app) {
             res.status(404).json({ message: 'Application not found' });
             return;
         }
-        const applicant = await index_1.prisma.user.findUnique({ where: { id: app.applicantId } });
+        const applicant = await db_1.prisma.user.findUnique({ where: { id: app.applicantId } });
         let updateData = {};
         if (decision === 'reject') {
             updateData.status = 'Rejected';
@@ -89,7 +89,7 @@ const processODApplication = async (req, res) => {
                 return;
             }
         }
-        const updatedApp = await index_1.prisma.onDutyApplication.update({
+        const updatedApp = await db_1.prisma.onDutyApplication.update({
             where: { id },
             data: updateData
         });
@@ -108,7 +108,7 @@ const updateODApplication = async (req, res) => {
             updates.fromDate = new Date(updates.fromDate);
         if (updates.toDate)
             updates.toDate = new Date(updates.toDate);
-        const updatedApp = await index_1.prisma.onDutyApplication.update({
+        const updatedApp = await db_1.prisma.onDutyApplication.update({
             where: { id },
             data: updates
         });
@@ -122,8 +122,8 @@ exports.updateODApplication = updateODApplication;
 // --- DUES Endpoints ---
 const getDuesAndCertificates = async (req, res) => {
     try {
-        const dues = await index_1.prisma.dues.findMany();
-        const certificates = await index_1.prisma.noDuesCertificate.findMany();
+        const dues = await db_1.prisma.dues.findMany();
+        const certificates = await db_1.prisma.noDuesCertificate.findMany();
         // Since frontend mock just held certificates, returning both or treating separately.
         // The mock actually didn't store dues globally, dues were embedded on User objects!
         // But for certificates, frontend stores NO_DUES_CERTIFICATES.
@@ -138,14 +138,14 @@ const updateDuesStatus = async (req, res) => {
     try {
         const { studentId, dueType, status } = req.body;
         // Ensure student exists
-        const student = await index_1.prisma.user.findUnique({ where: { id: studentId } });
+        const student = await db_1.prisma.user.findUnique({ where: { id: studentId } });
         if (!student) {
             res.status(404).json({ message: 'Student not found' });
             return;
         }
         const updateData = {};
         updateData[dueType] = status;
-        const updatedDues = await index_1.prisma.dues.upsert({
+        const updatedDues = await db_1.prisma.dues.upsert({
             where: { studentId },
             update: updateData,
             create: {
@@ -163,21 +163,21 @@ exports.updateDuesStatus = updateDuesStatus;
 const issueNoDuesCertificate = async (req, res) => {
     try {
         const { studentId } = req.body;
-        const dues = await index_1.prisma.dues.findUnique({ where: { studentId } });
+        const dues = await db_1.prisma.dues.findUnique({ where: { studentId } });
         if (!dues || !dues.library || !dues.department || !dues.accounts) {
             res.status(400).json({ message: 'All dues must be cleared first.' });
             return;
         }
-        const existingCert = await index_1.prisma.noDuesCertificate.findFirst({ where: { studentId } });
+        const existingCert = await db_1.prisma.noDuesCertificate.findFirst({ where: { studentId } });
         let cert;
         if (existingCert) {
-            cert = await index_1.prisma.noDuesCertificate.update({
+            cert = await db_1.prisma.noDuesCertificate.update({
                 where: { id: existingCert.id },
                 data: { status: 'Issued', issuedAt: new Date() }
             });
         }
         else {
-            cert = await index_1.prisma.noDuesCertificate.create({
+            cert = await db_1.prisma.noDuesCertificate.create({
                 data: {
                     studentId,
                     status: 'Issued',

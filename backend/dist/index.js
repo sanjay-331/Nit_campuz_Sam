@@ -6,20 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const client_1 = require("@prisma/client");
-const adapter_pg_1 = require("@prisma/adapter-pg");
-const pg_1 = require("pg");
 const dotenv_1 = __importDefault(require("dotenv"));
+const db_1 = require("./db");
+Object.defineProperty(exports, "prisma", { enumerable: true, get: function () { return db_1.prisma; } });
 dotenv_1.default.config();
-const connectionString = process.env.DATABASE_URL;
-const pool = new pg_1.Pool({ connectionString });
-const adapter = new adapter_pg_1.PrismaPg(pool);
-const prisma = new client_1.PrismaClient({ adapter });
-exports.prisma = prisma;
 const app = (0, express_1.default)();
 exports.app = app;
-const PORT = process.env.PORT || 5000;
-app.use((0, cors_1.default)());
+const PORT = process.env.PORT || 8080;
+app.use((0, cors_1.default)({
+    origin: ['https://nit-campuz.vercel.app', 'http://localhost:5173', 'http://localhost:3000'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
 app.use(express_1.default.json());
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));

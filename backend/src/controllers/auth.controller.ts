@@ -1,14 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import { prisma } from '../db';
 import bcrypt from 'bcrypt';
-import jwt from 'jwt-simple'; // We'll install this shortly
-
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+import jwt from 'jwt-simple';
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
