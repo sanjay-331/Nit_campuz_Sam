@@ -1,6 +1,8 @@
 // FIX: Use namespace import for 'redux-saga/effects' to fix module resolution errors.
 import * as sagaEffects from 'redux-saga/effects';
 import { PayloadAction } from '@reduxjs/toolkit';
+
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5000';
 import { loginRequest, loginSuccess, loginFailure, logout, updateUserRequest, updateUserSuccess, updateUserFailure, selectUser, deleteAccountRequest } from '../slices/authSlice';
 import { USERS } from '../../constants';
 import { User } from '../../types';
@@ -13,7 +15,7 @@ function* handleLoginRequest(action: PayloadAction<string>) {
     const password = 'password123';
     
     // Call the new Express API
-    const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/auth/login', {
+    const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

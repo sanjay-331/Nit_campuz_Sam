@@ -70,6 +70,8 @@ import {
 import { selectUser } from '../slices/authSlice';
 import { showToast } from '../slices/uiSlice';
 
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5000';
+
 // --- HELPER FUNCTIONS ---
 function generateId(prefix: string): string {
     return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -94,7 +96,7 @@ function* handleFetchUsers() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/users', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -114,7 +116,7 @@ function* handleFetchDepartments() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/departments', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/departments`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -132,7 +134,7 @@ function* handleFetchCourses() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/courses', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/courses`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -150,7 +152,7 @@ function* handleFetchMarks() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/marks', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/marks`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -168,7 +170,7 @@ function* handleFetchAttendance() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/attendance', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/attendance`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -186,7 +188,7 @@ function* handleFetchMaterials() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/materials', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/materials`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -204,7 +206,7 @@ function* handleFetchExamSchedules() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/exam-schedules', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/exam-schedules`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -222,7 +224,7 @@ function* handleFetchMentorAssignments() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/mentoring/assignments', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/mentoring/assignments`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -240,7 +242,7 @@ function* handleFetchRemarks() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/mentoring/remarks', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/mentoring/remarks`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -258,7 +260,7 @@ function* handleFetchTutors() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/tutoring/tutors', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/tutoring/tutors`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -276,7 +278,7 @@ function* handleFetchOnDutyApplications() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/admin/on-duty', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/admin/on-duty`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -294,7 +296,7 @@ function* handleFetchNoDuesCertificates() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/admin/no-dues', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/admin/no-dues`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -312,7 +314,7 @@ function* handleFetchTutorApplications() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/tutoring/applications', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/tutoring/applications`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -330,7 +332,7 @@ function* handleFetchTutoringSessions() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/tutoring/sessions', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/tutoring/sessions`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -348,7 +350,7 @@ function* handleFetchAssignments() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/assignments', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/assignments`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -366,7 +368,7 @@ function* handleFetchSubmissions() {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         if (!token) return;
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/assignments/submissions', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/assignments/submissions`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -453,7 +455,7 @@ function* handlePromoteClass(action: PayloadAction<{ departmentId: string; year:
         const { departmentId, year } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/users/promote', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users/promote`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -576,7 +578,7 @@ function* handleUpdateUserPermissions(action: PayloadAction<{ userId: string; pe
     const { userId, permissions } = action.payload;
     const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
 
-    const response: Response = yield sagaEffects.call(fetch, `http://localhost:5000/api/users/${userId}/permissions`, {
+    const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/users/${userId}/permissions`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -688,7 +690,7 @@ function* handleSubmitAttendance(action: PayloadAction<{ courseId: string; recor
         const { courseId, records } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/attendance', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/attendance`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -717,7 +719,7 @@ function* handleSaveMarks(action: PayloadAction<{ courseId: string; marks: Recor
         const { courseId, marks } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/marks', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/marks`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -746,7 +748,7 @@ function* handleSaveMarks(action: PayloadAction<{ courseId: string; marks: Recor
 function* handleAddMaterial(action: PayloadAction<Omit<Material, 'id' | 'uploadedAt'>>) {
     try {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/academic/materials', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/materials`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -776,7 +778,7 @@ function* handleAddAssignment(action: PayloadAction<Omit<Assignment, 'id' | 'sub
     try {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
 
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/assignments', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/assignments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -842,7 +844,7 @@ function* handleSubmitAssignment(action: PayloadAction<Omit<StudentSubmission, '
         const { assignmentId, ...submissionData } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
 
-        const response: Response = yield sagaEffects.call(fetch, `http://localhost:5000/api/assignments/${assignmentId}/submit`, {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/assignments/${assignmentId}/submit`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -872,7 +874,7 @@ function* handleGradeSubmission(action: PayloadAction<{ studentId: string; assig
         const { studentId, assignmentId, grade } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
 
-        const response: Response = yield sagaEffects.call(fetch, `http://localhost:5000/api/assignments/grade`, {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/assignments/grade`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -903,7 +905,7 @@ function* handleAddExamSchedules(action: PayloadAction<ExamSchedule[]>) {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
         
         yield sagaEffects.all(action.payload.map(schedule => 
-             sagaEffects.call(fetch, 'http://localhost:5000/api/academic/exam-schedules', {
+             sagaEffects.call(fetch, `${BASE_URL}/api/academic/exam-schedules`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -925,7 +927,7 @@ function* handleApproveTutorApplication(action: PayloadAction<string>) {
     try {
         const applicationId = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, `http://localhost:5000/api/tutoring/applications/${applicationId}/approve`, {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/tutoring/applications/${applicationId}/approve`, {
              method: 'POST',
              headers: {
                 'Content-Type': 'application/json',
@@ -951,7 +953,7 @@ function* handleApproveTutorApplication(action: PayloadAction<string>) {
 function* handleBookTutoringSession(action: PayloadAction<Omit<TutoringSession, 'id' | 'status'>>) {
     try {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/tutoring/sessions', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/tutoring/sessions`, {
              method: 'POST',
              headers: {
                 'Content-Type': 'application/json',
@@ -981,7 +983,7 @@ function* handleAutoAssignMentees(action: PayloadAction<{ departmentId: string }
     try {
         const { departmentId } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/mentoring/assignments/auto-assign', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/mentoring/assignments/auto-assign`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1011,7 +1013,7 @@ function* handleUpdateMentorAssignment(action: PayloadAction<{ studentId: string
     try {
         const { studentId, newMentorId } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/mentoring/assignments', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/mentoring/assignments`, {
              method: 'PUT',
              headers: {
                 'Content-Type': 'application/json',
@@ -1038,7 +1040,7 @@ function* handleUpdateMentorAssignment(action: PayloadAction<{ studentId: string
 function* handleAddRemark(action: PayloadAction<Omit<Remark, 'id' | 'timestamp'>>) {
     try {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/mentoring/remarks', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/mentoring/remarks`, {
              method: 'POST',
              headers: {
                 'Content-Type': 'application/json',
@@ -1067,7 +1069,7 @@ function* handleAddRemark(action: PayloadAction<Omit<Remark, 'id' | 'timestamp'>
 function* handleApplyForOD(action: PayloadAction<Omit<OnDutyApplication, 'id' | 'status' | 'appliedAt' | 'advisorApprovalId' | 'hodApprovalId' | 'principalApprovalId' | 'rejectedById'>>) {
     try {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/admin/on-duty/apply', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/admin/on-duty/apply`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1095,7 +1097,7 @@ function* handleProcessOD(action: PayloadAction<{ applicationId: string; decisio
     try {
         const { applicationId, decision } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, `http://localhost:5000/api/admin/on-duty/${applicationId}/process`, {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/admin/on-duty/${applicationId}/process`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -1123,7 +1125,7 @@ function* handleUpdateODApplication(action: PayloadAction<Partial<OnDutyApplicat
     try {
         const { id, ...updates } = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, `http://localhost:5000/api/admin/on-duty/${id}`, {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/admin/on-duty/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -1153,7 +1155,7 @@ function* handleUpdateODApplication(action: PayloadAction<Partial<OnDutyApplicat
 function* handleUpdateDuesStatus(action: PayloadAction<{ studentId: string; dueType: 'library' | 'department' | 'accounts'; status: boolean; }>) {
     try {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/admin/no-dues/update-dues', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/admin/no-dues/update-dues`, {
              method: 'POST',
              headers: {
                 'Content-Type': 'application/json',
@@ -1181,7 +1183,7 @@ function* handleIssueNoDuesCertificate(action: PayloadAction<string>) {
     try {
         const studentId = action.payload;
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
-        const response: Response = yield sagaEffects.call(fetch, 'http://localhost:5000/api/admin/no-dues/issue', {
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/admin/no-dues/issue`, {
              method: 'POST',
              headers: {
                 'Content-Type': 'application/json',
