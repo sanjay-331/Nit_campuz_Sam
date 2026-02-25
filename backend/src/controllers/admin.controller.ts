@@ -47,7 +47,7 @@ export const applyForOD = async (req: Request, res: Response): Promise<void> => 
 
 export const processODApplication = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
+        const { id } = req.params as { id: string };
         const { decision } = req.body;
         // Assume req.user comes from auth middleware
         const currentUser = (req as any).user; 
@@ -103,7 +103,7 @@ export const processODApplication = async (req: Request, res: Response): Promise
 
 export const updateODApplication = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { id } = req.params;
+        const { id } = req.params as { id: string };
         const updates = req.body;
         
         if (updates.fromDate) updates.fromDate = new Date(updates.fromDate);
