@@ -273,7 +273,7 @@ export const bulkCreateUsers = async (req: Request, res: Response): Promise<void
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params as { id: string };
-    const { name, email, role, departmentId, status } = req.body;
+    const { name, email, role, departmentId, status, regNo, year, section } = req.body;
 
     const prismaRole = role ? (role as string).toUpperCase() as UserRole : undefined;
     const prismaStatus = status ? (status as string).toUpperCase() as StudentStatus : undefined;
@@ -288,6 +288,24 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         status: prismaStatus
       }
     });
+
+    if (prismaRole === UserRole.STUDENT || (updatedUser.role === UserRole.STUDENT)) {
+        await prisma.studentProfile.upsert({
+            where: { userId: id },
+            update: {
+                regNo: regNo,
+                year: year ? Number(year) : undefined,
+                section: section
+            },
+            create: {
+                userId: id,
+                regNo: regNo || `REG-${id.substring(0, 8)}`,
+                year: year ? Number(year) : 1,
+                section: section || 'A',
+                admissionYear: new Date().getFullYear()
+            }
+        });
+    }
 
     res.json(updatedUser);
   } catch (error) {

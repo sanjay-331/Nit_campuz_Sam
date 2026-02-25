@@ -28,7 +28,7 @@ import { selectCan } from '../../../store/slices/authSlice';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../ui/Dialog';
 import { AppDispatch, RootState } from '../../../store';
 import { Link } from 'react-router-dom';
-import { selectAllUsers, addUserRequest, updateUserInListRequest, bulkUpdateUsersStatusRequest, bulkPromoteStudentsRequest, bulkAddUsersRequest } from '../../../store/slices/appSlice';
+import { selectAllUsers, addUserRequest, updateUserInListRequest, bulkUpdateUsersStatusRequest, bulkPromoteStudentsRequest, bulkAddUsersRequest, fetchUsersRequest, fetchDepartmentsRequest } from '../../../store/slices/appSlice';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/Tabs';
 import { showToast } from '../../../store/slices/uiSlice';
 import { selectAllDepartments } from '../../../store/slices/appSlice';
@@ -55,9 +55,11 @@ const UserManagement: React.FC = () => {
     const canManageUsers = useSelector(selectCan(Permission.MANAGE_USERS));
     
     useEffect(() => {
-      const timer = setTimeout(() => setLoading(false), 500); // Shorter delay now that data is local
+      dispatch(fetchUsersRequest());
+      dispatch(fetchDepartmentsRequest());
+      const timer = setTimeout(() => setLoading(false), 500);
       return () => clearTimeout(timer);
-    }, []);
+    }, [dispatch]);
 
     const filteredUsers = useMemo(() => {
         return users.filter(user => {
@@ -357,7 +359,13 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
     useEffect(() => {
         if (isOpen) {
             if (user) {
-                setFormData(user);
+                const initialData = { ...user } as any;
+                if ((user as any).studentProfile) {
+                    initialData.regNo = (user as any).studentProfile.regNo;
+                    initialData.year = (user as any).studentProfile.year;
+                    initialData.section = (user as any).studentProfile.section;
+                }
+                setFormData(initialData);
             } else {
                 setFormData({
                     name: '', email: '', role: UserRole.STUDENT, departmentId: '', status: StudentStatus.ACTIVE
@@ -393,7 +401,8 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
     };
     
     const handleSelectChange = (key: keyof User, value: string) => {
-        setFormData(prev => ({ ...prev, [key]: value }));
+        const processedValue = value === 'none' ? '' : value;
+        setFormData(prev => ({ ...prev, [key]: processedValue }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -536,12 +545,31 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                 </div>
                                 <div>
                                     <label htmlFor="edit-department" className="block text-sm font-medium text-slate-600 mb-1">Department</label>
-                                    <Select value={formData.departmentId} onValueChange={(v) => handleSelectChange('departmentId', v)}>
+                                    <Select value={formData.departmentId || ''} onValueChange={(v) => handleSelectChange('departmentId' as any, v)}>
                                         <SelectTrigger id="edit-department"><SelectValue placeholder="Department" /></SelectTrigger>
-                                        <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                                        <SelectContent>
+                                            <SelectItem value="none">None</SelectItem>
+                                            {DEPARTMENTS.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                        </SelectContent>
                                     </Select>
                                 </div>
                             </div>
+                            {formData.role === UserRole.STUDENT && (
+                                <div className="grid grid-cols-3 gap-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    <div>
+                                        <label htmlFor="edit-regNo" className="block text-sm font-medium text-slate-600 mb-1">Reg No</label>
+                                        <Input id="edit-regNo" name="regNo" placeholder="REG-001" value={(formData as any).regNo || ''} onChange={handleChange} />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="edit-year" className="block text-sm font-medium text-slate-600 mb-1">Year</label>
+                                        <Input id="edit-year" name="year" type="number" placeholder="1" value={(formData as any).year || ''} onChange={handleChange} />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="edit-section" className="block text-sm font-medium text-slate-600 mb-1">Section</label>
+                                        <Input id="edit-section" name="section" placeholder="A" value={(formData as any).section || ''} onChange={handleChange} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
@@ -583,12 +611,31 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                         </div>
                                         <div>
                                             <label htmlFor="department" className="block text-sm font-medium text-slate-600 mb-1">Department</label>
-                                            <Select value={formData.departmentId} onValueChange={(v) => handleSelectChange('departmentId', v)}>
+                                            <Select value={formData.departmentId || ''} onValueChange={(v) => handleSelectChange('departmentId' as any, v)}>
                                                 <SelectTrigger id="department"><SelectValue placeholder="Department" /></SelectTrigger>
-                                                <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                                                <SelectContent>
+                                                    <SelectItem value="none">None</SelectItem>
+                                                    {DEPARTMENTS.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                                </SelectContent>
                                             </Select>
                                         </div>
                                     </div>
+                                    {formData.role === UserRole.STUDENT && (
+                                        <div className="grid grid-cols-3 gap-4 pt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <div>
+                                                <label htmlFor="regNo" className="block text-sm font-medium text-slate-600 mb-1">Reg No</label>
+                                                <Input id="regNo" name="regNo" placeholder="REG-001" value={(formData as any).regNo || ''} onChange={handleChange} />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="year" className="block text-sm font-medium text-slate-600 mb-1">Year</label>
+                                                <Input id="year" name="year" type="number" placeholder="1" value={(formData as any).year || ''} onChange={handleChange} />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="section" className="block text-sm font-medium text-slate-600 mb-1">Section</label>
+                                                <Input id="section" name="section" placeholder="A" value={(formData as any).section || ''} onChange={handleChange} />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <DialogFooter className="pt-8 px-0 pb-0">
                                     <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
