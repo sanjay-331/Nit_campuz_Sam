@@ -106,7 +106,20 @@ async function main() {
     }
   });
 
-  // 7. Create Course
+  // 7. Create Exam Cell User
+  await prisma.user.upsert({
+    where: { email: 'examcell@nitcampuz.edu' },
+    update: {},
+    create: {
+      name: 'Exam Cell Controller',
+      email: 'examcell@nitcampuz.edu',
+      password: passwordHash,
+      role: UserRole.EXAM_CELL,
+      status: StudentStatus.ACTIVE,
+    }
+  });
+
+  // 8. Create Course
   await prisma.course.upsert({
     where: { code: 'CS101' },
     update: {},
