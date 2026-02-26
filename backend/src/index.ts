@@ -26,7 +26,9 @@ app.use(cors({
         const allowedOrigins = [
             'https://nit-campuz.vercel.app',
             'http://localhost:5173',
-            'http://localhost:3000'
+            'http://localhost:3000',
+            'http://localhost:4000',
+            'http://localhost:4001'
         ];
         
         if (!origin || allowedOrigins.includes(origin)) {

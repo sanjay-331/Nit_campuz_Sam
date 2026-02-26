@@ -67,6 +67,7 @@ const SelectTrigger = forwardRef<HTMLButtonElement, ButtonHTMLAttributes<HTMLBut
     return (
         <button
             ref={ref}
+            type="button"
             onClick={() => setOpen(!open)}
             className={cn("flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50", className)}
             {...props}
