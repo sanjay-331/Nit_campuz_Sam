@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getAllOnDutyApplications, applyForOD, processODApplication, updateODApplication, getDuesAndCertificates, updateDuesStatus, issueNoDuesCertificate } from '../controllers/admin.controller';
+import { getDashboardAnalytics } from '../controllers/analytics.controller';
 import { requireAuth, requireRole } from '../middlewares/auth.middleware';
 import { UserRole } from '@prisma/client';
 
@@ -17,5 +18,8 @@ router.put('/on-duty/:id', updateODApplication);
 router.get('/no-dues', getDuesAndCertificates);
 router.post('/no-dues/update-dues', requireRole([UserRole.STAFF, UserRole.HOD, UserRole.ADMIN]), updateDuesStatus);
 router.post('/no-dues/issue', requireRole([UserRole.HOD, UserRole.ADMIN]), issueNoDuesCertificate);
+
+// ANALYTICS ROUTES
+router.get('/analytics', requireRole([UserRole.HOD, UserRole.PRINCIPAL, UserRole.ADMIN]), getDashboardAnalytics);
 
 export default router;

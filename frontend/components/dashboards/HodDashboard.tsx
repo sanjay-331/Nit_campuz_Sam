@@ -13,6 +13,7 @@ import MentorManagement from './hod/MentorManagement';
 import ODApprovals from './staff/ODApprovals';
 import OnDuty from './student/OnDuty';
 import PromoteStudents from './admin/PromoteStudents';
+import DocumentVerification from './admin/DocumentVerification';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -50,6 +51,7 @@ const HodDashboard: React.FC = () => {
             <Route path="/leave-od" element={<AnimatedPage><OnDuty /></AnimatedPage>} />
             <Route path="/resources" element={<AnimatedPage><Resources /></AnimatedPage>} />
             <Route path="/approvals" element={<AnimatedPage><ODApprovals /></AnimatedPage>} />
+            <Route path="/verifications" element={<AnimatedPage><DocumentVerification /></AnimatedPage>} />
         </Routes>
     );
 };

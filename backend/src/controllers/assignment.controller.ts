@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
+import { getIO } from '../socket';
 
 export const getAllAssignments = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -27,6 +28,18 @@ export const createAssignment = async (req: Request, res: Response): Promise<voi
         dueDate: new Date(dueDate),
       }
     });
+
+    // Emit real-time notification
+    try {
+        const io = getIO();
+        io.emit('notification', {
+            type: 'Assignment',
+            message: `New assignment posted: ${title}`,
+            courseId: courseId
+        });
+    } catch (socketError) {
+        console.error('Socket emission failed:', socketError);
+    }
 
     res.status(201).json(assignment);
   } catch (error) {

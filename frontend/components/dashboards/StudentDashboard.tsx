@@ -10,6 +10,7 @@ import Grades from './student/Grades';
 import Attendance from './student/Attendance';
 import StudentLibrary from './student/StudentLibrary';
 import OnDuty from './student/OnDuty';
+import Documents from './student/Documents';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -44,6 +45,7 @@ const StudentDashboard: React.FC = () => {
             <Route path="/attendance" element={<AnimatedPage><Attendance /></AnimatedPage>} />
             <Route path="/library" element={<AnimatedPage><StudentLibrary /></AnimatedPage>} />
             <Route path="/leave-od" element={<AnimatedPage><OnDuty /></AnimatedPage>} />
+            <Route path="/documents" element={<AnimatedPage><Documents /></AnimatedPage>} />
         </Routes>
     );
 };

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
 import { UserRole } from '@prisma/client';
+import { getIO } from '../socket';
 
 const calculateGradeAndPoints = (internal: number, exam: number): { grade: string, gradePoint: number } => {
     const total = internal + (exam / 2); // Total out of 100
@@ -93,6 +94,18 @@ export const saveMarks = async (req: Request, res: Response): Promise<void> => {
             where: { userId: studentId },
             data: { cgpa: newCgpa }
         });
+    }
+
+    // Emit real-time notification
+    try {
+        const io = getIO();
+        io.emit('notification', {
+            type: 'Marks',
+            message: `New marks have been posted for your course.`,
+            courseId: courseId
+        });
+    } catch (socketError) {
+        console.error('Socket emission failed:', socketError);
     }
 
     res.json({ message: 'Marks updated successfully' });
@@ -199,6 +212,19 @@ export const createMaterial = async (req: Request, res: Response): Promise<void>
         const newMaterial = await prisma.material.create({
             data: { courseId, title, type, url }
         });
+
+        // Emit real-time notification
+        try {
+            const io = getIO();
+            io.emit('notification', {
+                type: 'Material',
+                message: `New study material posted: ${title}`,
+                courseId: courseId
+            });
+        } catch (socketError) {
+            console.error('Socket emission failed:', socketError);
+        }
+
         res.json(newMaterial);
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });

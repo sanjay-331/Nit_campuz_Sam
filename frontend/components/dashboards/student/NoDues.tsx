@@ -26,6 +26,36 @@ const NoDues: React.FC = () => {
         dispatch(issueNoDuesCertificateRequest(user.id));
     };
 
+    const handleDownload = () => {
+        const token = localStorage.getItem('lms_token');
+        const url = `${import.meta.env.VITE_BASE_URL || 'http://localhost:5000'}/api/academic/report/no-dues/${user.id}`;
+        
+        // Use fetch to download the file with authorization
+        fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.blob();
+        })
+        .then(blob => {
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `No_Dues_Certificate_${user.id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        })
+        .catch(error => {
+            console.error('Error downloading PDF:', error);
+            // Optionally dispatch a toast error here
+        });
+    };
+
     const DueItem: React.FC<{ title: string, cleared: boolean }> = ({ title, cleared }) => (
         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border">
             <p className="font-medium text-slate-700">{title}</p>
@@ -70,7 +100,7 @@ const NoDues: React.FC = () => {
                                     <ShieldCheckIcon className="w-12 h-12 text-green-500 mx-auto mb-3" />
                                     <h3 className="font-bold text-green-700">Certificate Issued!</h3>
                                     <p className="text-xs text-slate-500 mt-1">Issued on: {myCertificate.issuedAt ? new Date(myCertificate.issuedAt).toLocaleDateString() : 'N/A'}</p>
-                                    <Button size="sm" className="mt-4 w-full">Download Certificate</Button>
+                                    <Button size="sm" className="mt-4 w-full" onClick={handleDownload}>Download Certificate</Button>
                                 </>
                             ) : myCertificate?.status === 'Requested' ? (
                                 <>

@@ -1,7 +1,9 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { prisma } from './db';
+import { initSocket } from './socket';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import academicRoutes from './routes/academic.routes';
@@ -9,11 +11,17 @@ import assignmentRoutes from './routes/assignment.routes';
 import mentoringRoutes from './routes/mentoring.routes';
 import tutoringRoutes from './routes/tutoring.routes';
 import adminRoutes from './routes/admin.routes';
+import documentRoutes from './routes/document.routes';
+import { errorHandler } from './middleware/error';
 
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 8080;
+
+// Initialize Socket.io
+initSocket(server);
 
 // Request Logging
 app.use((req, res, next) => {
@@ -57,6 +65,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/mentoring', mentoringRoutes);
 app.use('/api/tutoring', tutoringRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/documents', documentRoutes);
 
 // Basic healthcheck route
 app.get('/api/health', (req: express.Request, res: express.Response) => {
@@ -64,13 +73,10 @@ app.get('/api/health', (req: express.Request, res: express.Response) => {
 });
 
 // Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    console.error('Unhandled Error:', err);
-    res.status(500).json({ message: 'Internal server error', error: err.message });
-});
+app.use(errorHandler);
 
 // Start the server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
 

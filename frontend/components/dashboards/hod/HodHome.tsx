@@ -2,8 +2,8 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { useSelector } from 'react-redux';
-import { selectAllUsers, selectAllDepartments } from '../../../store/slices/appSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectAllUsers, selectAllDepartments, selectAnalytics, fetchAnalyticsRequest } from '../../../store/slices/appSlice';
 import { UserRole, StudentStatus, Student, Staff } from '../../../types';
 import { selectUser } from '../../../store/slices/authSlice';
 import StatCard from '../../dashboard/StatCard';
@@ -30,24 +30,37 @@ const itemVariants = {
 };
 
 const HodHome: React.FC = () => {
+    const dispatch = useDispatch();
     const user = useSelector(selectUser);
     const users = useSelector(selectAllUsers);
     const DEPARTMENTS = useSelector(selectAllDepartments);
+    const analytics = useSelector(selectAnalytics);
+
+    React.useEffect(() => {
+        dispatch(fetchAnalyticsRequest());
+    }, [dispatch]);
+
     const STUDENTS = users.filter(u => u.role === UserRole.STUDENT && (u as any).status !== StudentStatus.ALUMNI) as Student[];
     const STAFF = users.filter(u => u.role === UserRole.STAFF || u.role === UserRole.HOD) as Staff[];
     
     const department = DEPARTMENTS.find(d => d.id === user?.departmentId);
     const deptStudents = STUDENTS.filter(s => s.departmentId === user?.departmentId);
-    const deptStaff = STAFF.filter(s => s.departmentId === user?.departmentId);
+    
+    // We will use real backend analytics if available, fallback to local computed data
+    const totalStudents = analytics?.overview?.totalStudents || deptStudents.length;
+    const totalStaff = analytics?.overview?.totalStaff || STAFF.filter(s => s.departmentId === user?.departmentId).length;
+    const avgAttendance = analytics?.overview?.attendancePercentage ? `${analytics.overview.attendancePercentage}%` : "92%";
     
     const avgCgpa = deptStudents.length > 0 
         ? (deptStudents.reduce((acc, s) => acc + s.cgpa, 0) / deptStudents.length).toFixed(2)
         : 'N/A';
 
-    const studentPerformanceData = [...deptStudents]
-        .sort((a,b) => b.cgpa - a.cgpa)
-        .slice(0, 5)
-        .map(s => ({ name: s.name.split(' ')[0], cgpa: s.cgpa }));
+    const studentPerformanceData = analytics?.studentDistribution 
+        ? analytics.studentDistribution 
+        : [...deptStudents]
+            .sort((a,b) => b.cgpa - a.cgpa)
+            .slice(0, 5)
+            .map(s => ({ name: s.name.split(' ')[0], cgpa: s.cgpa }));
 
   return (
     <div className="space-y-6">
@@ -62,16 +75,16 @@ const HodHome: React.FC = () => {
             initial="hidden"
             animate="visible"
         >
-            <motion.div variants={itemVariants}><StatCard title="Total Students" value={deptStudents.length} /></motion.div>
-            <motion.div variants={itemVariants}><StatCard title="Total Staff" value={deptStaff.length} /></motion.div>
+            <motion.div variants={itemVariants}><StatCard title="Total Students" value={totalStudents} /></motion.div>
+            <motion.div variants={itemVariants}><StatCard title="Total Staff" value={totalStaff} /></motion.div>
             <motion.div variants={itemVariants}><StatCard title="Average CGPA" value={avgCgpa} /></motion.div>
-            <motion.div variants={itemVariants}><StatCard title="Avg. Attendance" value="92%" /></motion.div>
+            <motion.div variants={itemVariants}><StatCard title="Avg. Attendance" value={avgAttendance} /></motion.div>
         </motion.div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
             <CardHeader>
-                <CardTitle>Top Student Performance (CGPA)</CardTitle>
+                <CardTitle>{analytics?.studentDistribution ? 'Department Student Distribution' : 'Top Student Performance (CGPA)'}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="w-full h-80">
@@ -89,7 +102,11 @@ const HodHome: React.FC = () => {
                               }}
                               itemStyle={{ color: '#0f172a' }}
                             />
-                            <Bar dataKey="cgpa" fill="#2563eb" barSize={30} radius={[6, 6, 0, 0]} />
+                            {analytics?.studentDistribution ? 
+                                <Bar dataKey="count" fill="#2563eb" barSize={30} radius={[6, 6, 0, 0]} />
+                                :
+                                <Bar dataKey="cgpa" fill="#2563eb" barSize={30} radius={[6, 6, 0, 0]} />
+                            }
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

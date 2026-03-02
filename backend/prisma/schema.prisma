@@ -38,6 +38,7 @@ model User {
   alumniProfile  AlumniProfile?
 
   department Department? @relation(fields: [departmentId], references: [id])
+  documents  StudentDocument[]
 }
 
 model StudentProfile {
@@ -241,4 +242,18 @@ model Dues {
   library    Boolean @default(false)
   department Boolean @default(false)
   accounts   Boolean @default(false)
+}
+
+model StudentDocument {
+  id          String   @id @default(uuid())
+  studentId   String
+  title       String   // e.g. "10th Marksheet", "Migration Certificate"
+  fileUrl     String
+  status      String   @default("Pending") // Pending, Verified, Rejected
+  remarks     String?
+  uploadedAt  DateTime @default(now())
+  verifiedAt  DateTime?
+  verifiedBy  String?  // Admin/HOD ID
+
+  user        User     @relation(fields: [studentId], references: [id])
 }

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User, Department, Course, Mark, Attendance, Material, ExamSchedule, Student, Staff, Alumnus, Assignment, StudentSubmission, ClassInDepartment, Permission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate } from '../../types';
+import { User, Department, Course, Mark, Attendance, Material, ExamSchedule, Student, Staff, Alumnus, Assignment, StudentSubmission, ClassInDepartment, Permission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate, DashboardAnalytics, StudentDocument } from '../../types';
 import { RootState } from '../index';
 import * as D from '../../constants';
 
@@ -22,6 +22,9 @@ export interface AppState {
     onDutyApplications: OnDutyApplication[];
     // FIX: Add state for no dues certificates.
     noDuesCertificates: NoDuesCertificate[];
+    analytics: DashboardAnalytics | null;
+    studentDocuments: StudentDocument[];
+    pendingDocuments: StudentDocument[];
 }
 
 const initialState: AppState = {
@@ -43,6 +46,9 @@ const initialState: AppState = {
     onDutyApplications: [],
     // FIX: Initialize state for no dues certificates.
     noDuesCertificates: [],
+    analytics: null,
+    studentDocuments: [],
+    pendingDocuments: [],
 };
 
 const appSlice = createSlice({
@@ -164,6 +170,25 @@ const appSlice = createSlice({
         setNoDuesCertificates: (state, action: PayloadAction<NoDuesCertificate[]>) => {
             state.noDuesCertificates = action.payload;
         },
+
+        // Analytics
+        fetchAnalyticsRequest: (state) => {},
+        setAnalytics: (state, action: PayloadAction<DashboardAnalytics>) => {
+            state.analytics = action.payload;
+        },
+
+        // Documents
+        uploadDocumentRequest: (state, action: PayloadAction<{ title: string, fileUrl: string }>) => {},
+        fetchStudentDocumentsRequest: (state) => {},
+        setStudentDocuments: (state, action: PayloadAction<StudentDocument[]>) => {
+            // Can be used for student viewing their own, or admin viewing specific student
+            state.studentDocuments = action.payload; 
+        },
+        fetchPendingDocumentsRequest: (state) => {},
+        setPendingDocuments: (state, action: PayloadAction<StudentDocument[]>) => {
+            state.pendingDocuments = action.payload;
+        },
+        verifyDocumentRequest: (state, action: PayloadAction<{ documentId: string, status: 'Verified' | 'Rejected', remarks?: string }>) => {},
     }
 });
 
@@ -231,6 +256,14 @@ export const {
     issueNoDuesCertificateRequest,
     fetchNoDuesCertificatesRequest,
     setNoDuesCertificates,
+    fetchAnalyticsRequest,
+    setAnalytics,
+    uploadDocumentRequest,
+    fetchStudentDocumentsRequest,
+    setStudentDocuments,
+    fetchPendingDocumentsRequest,
+    setPendingDocuments,
+    verifyDocumentRequest,
 } = appSlice.actions;
 
 // Selectors
@@ -252,6 +285,9 @@ export const selectAllRemarks = (state: RootState) => state.app.remarks;
 export const selectAllODApplications = (state: RootState) => state.app.onDutyApplications;
 // FIX: Add selector for No Dues Certificates.
 export const selectAllNoDuesCertificates = (state: RootState) => state.app.noDuesCertificates;
+export const selectAnalytics = (state: RootState) => state.app.analytics;
+export const selectStudentDocuments = (state: RootState) => state.app.studentDocuments;
+export const selectPendingDocuments = (state: RootState) => state.app.pendingDocuments;
 
 
 export default appSlice.reducer;

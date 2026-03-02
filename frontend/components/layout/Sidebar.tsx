@@ -36,6 +36,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Promote', path: '/promote', icon: RocketIcon, permission: Permission.PROMOTE_STUDENTS },
     { name: 'Attendance', path: '/attendance-analytics', icon: BarChartIcon, permission: Permission.GENERATE_REPORTS },
     { name: 'Logs', path: '/logs', icon: ClipboardListIcon, permission: Permission.VIEW_LOGS },
+    { name: 'Verifications', path: '/verifications', icon: ShieldCheckIcon, permission: Permission.MANAGE_USERS },
     { name: 'Permissions', path: '/permissions', icon: ShieldCheckIcon, permission: Permission.MANAGE_USERS },
   ],
   [UserRole.PRINCIPAL]: [
@@ -43,6 +44,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Directory', path: '/directory', icon: UsersIcon, permission: Permission.VIEW_USERS },
     { name: 'Departments', path: '/departments', icon: OfficeBuildingIcon, permission: Permission.VIEW_DEPARTMENTS },
     { name: 'Approvals', path: '/approvals', icon: CheckCircleIcon, permission: Permission.VIEW_USERS }, // Assume view_users
+    { name: 'Verifications', path: '/verifications', icon: ShieldCheckIcon, permission: Permission.VIEW_USERS },
     { name: 'Reports', path: '/reports', icon: DocumentReportIcon, permission: Permission.GENERATE_REPORTS },
   ],
   [UserRole.HOD]: [
@@ -55,6 +57,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Leave / OD', path: '/leave-od', icon: BriefcaseIcon, permission: Permission.VIEW_USERS },
     { name: 'Resources', path: '/resources', icon: BeakerIcon, permission: Permission.VIEW_USERS },
     { name: 'Approvals', path: '/approvals', icon: CheckCircleIcon, permission: Permission.VIEW_USERS },
+    { name: 'Verifications', path: '/verifications', icon: ShieldCheckIcon, permission: Permission.VIEW_USERS },
   ],
   [UserRole.STAFF]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon },
@@ -77,6 +80,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Attendance', path: '/attendance', icon: ClipboardListIcon },
     { name: 'e-Library', path: '/library', icon: BookOpenIcon },
     { name: 'Leave / OD', path: '/leave-od', icon: BriefcaseIcon },
+    { name: 'Documents', path: '/documents', icon: UploadIcon },
   ],
   [UserRole.EXAM_CELL]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon },

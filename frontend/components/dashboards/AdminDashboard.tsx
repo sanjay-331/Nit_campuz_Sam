@@ -12,6 +12,7 @@ import AlumniManagement from './admin/AlumniManagement.tsx';
 import ActivityLogs from './admin/ActivityLogs.tsx';
 import AttendanceAnalytics from './admin/AttendanceAnalytics.tsx';
 import PromoteStudents from './admin/PromoteStudents.tsx';
+import DocumentVerification from './admin/DocumentVerification.tsx';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -46,6 +47,7 @@ const AdminDashboard: React.FC = () => {
             <Route path="/alumni" element={<AnimatedPage><AlumniManagement /></AnimatedPage>} />
             <Route path="/promote" element={<AnimatedPage><PromoteStudents /></AnimatedPage>} />
             <Route path="/attendance-analytics" element={<AnimatedPage><AttendanceAnalytics /></AnimatedPage>} />
+            <Route path="/verifications" element={<AnimatedPage><DocumentVerification /></AnimatedPage>} />
             <Route path="/logs" element={<AnimatedPage><ActivityLogs /></AnimatedPage>} />
         </Routes>
     );

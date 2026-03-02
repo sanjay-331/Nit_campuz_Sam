@@ -66,7 +66,16 @@ import {
     setNoDuesCertificates,
     fetchAssignmentsRequest,
     fetchSubmissionsRequest,
+    fetchAnalyticsRequest,
+    setAnalytics,
+    uploadDocumentRequest,
+    fetchStudentDocumentsRequest,
+    setStudentDocuments,
+    fetchPendingDocumentsRequest,
+    setPendingDocuments,
+    verifyDocumentRequest,
 } from '../slices/appSlice';
+import { DashboardAnalytics, StudentDocument } from '../../types';
 import { selectUser } from '../slices/authSlice';
 import { showToast } from '../slices/uiSlice';
 
@@ -378,6 +387,28 @@ function* handleFetchSubmissions() {
         }
     } catch (error) {
         console.error('Error fetching submissions:', error);
+    }
+}
+
+// --- ANALYTICS SAGAS ---
+
+function* handleFetchAnalytics() {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        if (!token) return;
+
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/admin/analytics`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data: DashboardAnalytics = yield sagaEffects.call([response, 'json']);
+            yield sagaEffects.put(setAnalytics(data));
+        } else {
+             console.error('Failed to fetch analytics.');
+        }
+    } catch (error) {
+        console.error('Error fetching analytics:', error);
     }
 }
 
@@ -1267,6 +1298,101 @@ function* handleIssueNoDuesCertificate(action: PayloadAction<string>) {
     }
 }
 
+// --- DOCUMENT SAGAS ---
+
+function* handleUploadDocument(action: PayloadAction<{ title: string, fileUrl: string }>) {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/documents/upload`, {
+             method: 'POST',
+             headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Document uploaded successfully.' }));
+            yield sagaEffects.put(fetchStudentDocumentsRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to upload document.');
+        }
+    } catch (error) {
+         if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to upload document.' }));
+        }
+    }
+}
+
+function* handleFetchStudentDocuments() {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        if (!token) return;
+
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/documents/my-documents`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data: StudentDocument[] = yield sagaEffects.call([response, 'json']);
+            yield sagaEffects.put(setStudentDocuments(data));
+        }
+    } catch (error) {
+        console.error('Error fetching student documents:', error);
+    }
+}
+
+function* handleFetchPendingDocuments() {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        if (!token) return;
+
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/documents/pending`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data: StudentDocument[] = yield sagaEffects.call([response, 'json']);
+            yield sagaEffects.put(setPendingDocuments(data));
+        }
+    } catch (error) {
+        console.error('Error fetching pending documents:', error);
+    }
+}
+
+function* handleVerifyDocument(action: PayloadAction<{ documentId: string, status: 'Verified' | 'Rejected', remarks?: string }>) {
+    try {
+        const { documentId, ...verifyData } = action.payload;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/documents/${documentId}/verify`, {
+             method: 'PUT',
+             headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(verifyData),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: `Document ${verifyData.status.toLowerCase()} successfully.` }));
+            yield sagaEffects.put(fetchPendingDocumentsRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to verify document.');
+        }
+    } catch (error) {
+         if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to verify document.' }));
+        }
+    }
+}
+
 
 // --- WATCHER SAGA ---
 
@@ -1303,6 +1429,10 @@ function* appSaga() {
   yield sagaEffects.takeLatest(fetchNoDuesCertificatesRequest.type, handleFetchNoDuesCertificates);
   yield sagaEffects.takeLatest(issueNoDuesCertificateRequest.type, handleIssueNoDuesCertificate);
   
+  // Document Actions
+  yield sagaEffects.takeLatest(uploadDocumentRequest.type, handleUploadDocument);
+  yield sagaEffects.takeLatest(verifyDocumentRequest.type, handleVerifyDocument);
+  
   // Fetch Actions
   yield sagaEffects.takeLatest(fetchUsersRequest.type, handleFetchUsers);
   yield sagaEffects.takeLatest(fetchDepartmentsRequest.type, handleFetchDepartments);
@@ -1317,7 +1447,10 @@ function* appSaga() {
   yield sagaEffects.takeLatest(fetchTutorApplicationsRequest.type, handleFetchTutorApplications);
   yield sagaEffects.takeLatest(fetchTutoringSessionsRequest.type, handleFetchTutoringSessions);
   yield sagaEffects.takeLatest(fetchAssignmentsRequest.type, handleFetchAssignments);
+  yield sagaEffects.takeLatest(fetchStudentDocumentsRequest.type, handleFetchStudentDocuments);
+  yield sagaEffects.takeLatest(fetchPendingDocumentsRequest.type, handleFetchPendingDocuments);
   yield sagaEffects.takeLatest(fetchSubmissionsRequest.type, handleFetchSubmissions);
+  yield sagaEffects.takeLatest(fetchAnalyticsRequest.type, handleFetchAnalytics);
 }
 
 export default appSaga;

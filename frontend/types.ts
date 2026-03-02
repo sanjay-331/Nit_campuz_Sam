@@ -279,3 +279,30 @@ export interface NoDuesCertificate {
     status: 'Requested' | 'Issued';
     issuedAt?: string;
 }
+
+export interface DashboardAnalytics {
+    overview: {
+        totalStudents: number;
+        totalStaff: number;
+        totalCourses: number;
+        totalDepartments: number;
+        attendancePercentage?: number;
+    };
+    studentDistribution: { name: string; count: number }[];
+}
+
+export interface StudentDocument {
+    id: string;
+    studentId: string;
+    title: string;
+    fileUrl: string;
+    status: 'Pending' | 'Verified' | 'Rejected';
+    remarks?: string;
+    uploadedAt: string;
+    verifiedAt?: string;
+    verifiedBy?: string;
+    user?: {
+         name: string;
+         email: string;
+    }
+}

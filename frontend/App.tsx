@@ -9,9 +9,13 @@ import DashboardPage from './pages/Dashboard';
 import { AnimatePresence } from 'framer-motion';
 import ForgotPasswordPage from './pages/ForgotPassword';
 import ResetPasswordPage from './pages/ResetPassword';
+import { useSocket } from './hooks/useSocket';
 
 const App: React.FC = () => {
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  
+  // Initialize socket connection for real-time notifications
+  useSocket();
 
   return (
     <BrowserRouter>

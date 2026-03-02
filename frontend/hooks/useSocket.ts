@@ -1,0 +1,53 @@
+import { useEffect } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
+import { showToast } from '../store/slices/uiSlice';
+
+const SOCKET_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5000';
+
+let socket: Socket | null = null;
+
+export const useSocket = () => {
+    const dispatch = useDispatch();
+    const isAuthenticated = useSelector(selectIsAuthenticated);
+    const user = useSelector(selectUser);
+
+    useEffect(() => {
+        if (isAuthenticated && user && !socket) {
+            socket = io(SOCKET_URL, {
+                // Ensure auth token or credentials could be passed here if needed
+            });
+
+            socket.on('connect', () => {
+                console.log('Connected to WebSocket server:', socket?.id);
+                // Join personal room for targeted alerts (if supported by backend)
+                const currentUser = user as any; 
+                if (currentUser && currentUser.id) {
+                    socket?.emit('join_user_room', currentUser.id);
+                }
+            });
+
+            // Listen for global or departmental push notifications
+            socket.on('notification', (data: { type: string, message: string, courseId?: string }) => {
+                dispatch(showToast({ type: 'success', message: `[${data.type}] ${data.message}` }));
+                // In a robust implementation, you might optionally dispatch an action
+                // to reload assignments or marks if data.courseId matches the current view
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from WebSocket server');
+            });
+        }
+
+        // Cleanup on unmount or logout
+        return () => {
+            if (socket && (!isAuthenticated || !user)) {
+                socket.disconnect();
+                socket = null;
+            }
+        };
+    }, [isAuthenticated, user, dispatch]);
+
+    return socket;
+};
