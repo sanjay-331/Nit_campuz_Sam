@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User, Department, Course, Mark, Attendance, Material, ExamSchedule, Student, Staff, Alumnus, Assignment, StudentSubmission, ClassInDepartment, Permission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate, DashboardAnalytics, StudentDocument } from '../../types';
+import { User, Department, Course, Mark, Attendance, Material, ExamSchedule, Student, Staff, Alumnus, Assignment, StudentSubmission, ClassInDepartment, Permission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate, DashboardAnalytics, StudentDocument, Notification } from '../../types';
 import { RootState } from '../index';
 import * as D from '../../constants';
 
@@ -22,6 +22,7 @@ export interface AppState {
     onDutyApplications: OnDutyApplication[];
     // FIX: Add state for no dues certificates.
     noDuesCertificates: NoDuesCertificate[];
+    notifications: Notification[];
     analytics: DashboardAnalytics | null;
     studentDocuments: StudentDocument[];
     pendingDocuments: StudentDocument[];
@@ -31,21 +32,22 @@ const initialState: AppState = {
     users: D.USERS,
     departments: D.DEPARTMENTS,
     courses: D.COURSES,
-    marks: [],
-    attendance: [],
-    materials: [],
-    examSchedules: [],
-    assignments: [],
-    submissions: [],
+    marks: D.MARKS,
+    attendance: D.ATTENDANCE,
+    materials: D.MATERIALS,
+    examSchedules: D.EXAM_SCHEDULES,
+    assignments: D.ASSIGNMENTS,
+    submissions: D.SUBMISSIONS,
     classes: D.CLASSES,
-    tutors: [],
-    tutorApplications: [],
-    tutoringSessions: [],
-    mentorAssignments: [],
-    remarks: [],
-    onDutyApplications: [],
+    tutors: D.TUTORS,
+    tutorApplications: D.TUTOR_APPLICATIONS,
+    tutoringSessions: D.TUTORING_SESSIONS,
+    mentorAssignments: D.MENTOR_ASSIGNMENTS || [],
+    remarks: D.REMARKS || [],
+    onDutyApplications: D.ON_DUTY_APPLICATIONS || [],
     // FIX: Initialize state for no dues certificates.
-    noDuesCertificates: [],
+    noDuesCertificates: D.NO_DUES_CERTIFICATES || [],
+    notifications: D.NOTIFICATIONS,
     analytics: null,
     studentDocuments: [],
     pendingDocuments: [],
@@ -189,6 +191,16 @@ const appSlice = createSlice({
             state.pendingDocuments = action.payload;
         },
         verifyDocumentRequest: (state, action: PayloadAction<{ documentId: string, status: 'Verified' | 'Rejected', remarks?: string }>) => {},
+
+        // Notifications
+        fetchNotificationsRequest: (state) => {},
+        setNotifications: (state, action: PayloadAction<Notification[]>) => {
+            state.notifications = action.payload;
+        },
+        markNotificationReadRequest: (state, action: PayloadAction<string>) => {},
+        addNotification: (state, action: PayloadAction<Notification>) => {
+            state.notifications = [action.payload, ...state.notifications].slice(0, 20); // Keep last 20
+        },
     }
 });
 
@@ -264,6 +276,10 @@ export const {
     fetchPendingDocumentsRequest,
     setPendingDocuments,
     verifyDocumentRequest,
+    fetchNotificationsRequest,
+    setNotifications,
+    markNotificationReadRequest,
+    addNotification,
 } = appSlice.actions;
 
 // Selectors
@@ -288,6 +304,7 @@ export const selectAllNoDuesCertificates = (state: RootState) => state.app.noDue
 export const selectAnalytics = (state: RootState) => state.app.analytics;
 export const selectStudentDocuments = (state: RootState) => state.app.studentDocuments;
 export const selectPendingDocuments = (state: RootState) => state.app.pendingDocuments;
+export const selectNotifications = (state: RootState) => state.app.notifications;
 
 
 export default appSlice.reducer;

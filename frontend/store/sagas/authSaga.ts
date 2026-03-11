@@ -45,8 +45,9 @@ function* handleLoginRequest(action: PayloadAction<string>) {
 function* handleLogout() {
     try {
         yield sagaEffects.call([localStorage, 'removeItem'], 'lms_user');
+        yield sagaEffects.call([localStorage, 'removeItem'], 'lms_token');
     } catch (error) {
-        console.error("Failed to clear user from localStorage", error);
+        console.error("Failed to clear session from localStorage", error);
     }
 }
 

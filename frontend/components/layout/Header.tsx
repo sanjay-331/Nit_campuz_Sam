@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/DropdownMenu";
 import Notifications from '../shared/Notifications';
-import SettingsSheet from '../dashboards/admin/SettingsSheet';
+import SettingsSheet from '../shared/SettingsSheet';
 import { Permission } from '../../types';
 import { Link } from 'react-router-dom';
 
@@ -93,11 +93,9 @@ const Header: React.FC<{
 
           <Notifications />
 
-          {canConfigureSystem && (
-            <Button variant="ghost" size="sm" className="!p-2.5" onClick={() => setIsSettingsOpen(true)} aria-label="Settings">
-              <SettingsIcon className="w-5 h-5" />
-            </Button>
-          )}
+          <Button variant="ghost" size="sm" className="!p-2.5" onClick={() => setIsSettingsOpen(true)} aria-label="Settings">
+            <SettingsIcon className="w-5 h-5" />
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -117,12 +115,10 @@ const Header: React.FC<{
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                {canConfigureSystem && (
-                  <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
-                    <SettingsIcon className="w-4 h-4 mr-2" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
+                  <SettingsIcon className="w-4 h-4 mr-2" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogoutIcon className="w-4 h-4 mr-2" />

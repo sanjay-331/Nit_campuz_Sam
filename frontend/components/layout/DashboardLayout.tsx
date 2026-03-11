@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import { motion } from 'framer-motion';
 import BottomNavBar from './BottomNavBar';
-import SettingsSheet from '../dashboards/admin/SettingsSheet';
+import SettingsSheet from '../shared/SettingsSheet';
 import { selectCan } from '../../store/slices/authSlice';
 import { Permission } from '../../types';
 import Toast from '../shared/Toast';
@@ -59,7 +59,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         </main>
         <BottomNavBar />
       </div>
-      {canConfigureSystem && <SettingsSheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />}
+      <SettingsSheet open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       <Toast />
     </div>
   );

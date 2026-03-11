@@ -136,16 +136,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, isMobileOpen, setMobileO
                 })}
             </nav>
             <div className="px-4 py-4 border-t border-slate-200">
-                {canConfigureSystem && (
-                     <button onClick={() => setIsSettingsOpen(true)} className={navLinkClass({isActive: false})}>
-                        <SettingsIcon className={`w-6 h-6 flex-shrink-0 ${!isCollapsed && 'mr-3'}`} />
-                        {!isCollapsed && <span className="font-medium">Settings</span>}
-                    </button>
-                )}
-                <a href="#" className={navLinkClass({isActive: false})}>
+                <button onClick={() => setIsSettingsOpen(true)} className={navLinkClass({isActive: false})}>
+                    <SettingsIcon className={`w-6 h-6 flex-shrink-0 ${!isCollapsed && 'mr-3'}`} />
+                    {!isCollapsed && <span className="font-medium">Settings</span>}
+                </button>
+                <NavLink to="/help" className={navLinkClass}>
                     <LifebuoyIcon className={`w-6 h-6 flex-shrink-0 ${!isCollapsed && 'mr-3'}`} />
                     {!isCollapsed && <span className="font-medium">Help & Support</span>}
-                </a>
+                </NavLink>
             </div>
         </div>
     );

@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { selectAllUsers } from '../../../store/slices/appSlice';
+import { useNavigate } from 'react-router-dom';
+import { selectAllUsers, selectNotifications } from '../../../store/slices/appSlice';
 import StatCard from '../../dashboard/StatCard';
 import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
@@ -36,17 +37,30 @@ const itemVariants = {
 
 
 const AdminHome: React.FC = () => {
+    const navigate = useNavigate();
     const users = useSelector(selectAllUsers);
+    const notifications = useSelector(selectNotifications);
+    
     const students = users.filter(u => u.role === UserRole.STUDENT && (u as any).status !== StudentStatus.ALUMNI);
     const staff = users.filter(u => u.role === UserRole.STAFF);
     const alumni = users.filter(u => u.role === UserRole.STUDENT && (u as any).status === StudentStatus.ALUMNI);
     const hods = users.filter(s => s.role === UserRole.HOD).length;
+
     const quickActions = [
-        "Promote Students",
-        "Move Graduates to Alumni",
-        "Sync with Workspace",
-        "Generate Report"
+        { label: "Promote Students", path: "/promote" },
+        { label: "Move Graduates to Alumni", path: "/alumni" },
+        { label: "Attendance Analysis", path: "/attendance-analytics" },
+        { label: "User Management", path: "/users" }
     ];
+
+    const getNotificationStyle = (type: string) => {
+        switch (type) {
+            case 'Approval': return 'bg-blue-50 border-blue-200 text-blue-800';
+            case 'Alert': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+            case 'Action': return 'bg-red-50 border-red-200 text-red-800';
+            default: return 'bg-slate-50 border-slate-200 text-slate-800';
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -73,9 +87,13 @@ const AdminHome: React.FC = () => {
                          animate="visible"
                        >
                          {quickActions.map(action => (
-                            <motion.div key={action} variants={itemVariants}>
-                                <Button variant="secondary" className="w-full !justify-start !p-4 !font-medium">
-                                    {action}
+                            <motion.div key={action.label} variants={itemVariants}>
+                                <Button 
+                                    variant="secondary" 
+                                    className="w-full !justify-start !p-4 !font-medium"
+                                    onClick={() => navigate(action.path)}
+                                >
+                                    {action.label}
                                 </Button>
                             </motion.div>
                          ))}
@@ -86,15 +104,16 @@ const AdminHome: React.FC = () => {
                     <CardHeader><CardTitle>Notifications</CardTitle></CardHeader>
                     <CardContent>
                         <ul className="space-y-3">
-                            <li className="text-sm p-3 rounded-lg bg-blue-50 border border-blue-200">
-                                <span className="font-semibold text-blue-800">Approval Needed:</span> New staff account for Prof. Davis.
-                            </li>
-                            <li className="text-sm p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-                                <span className="font-semibold text-yellow-800">System Alert:</span> Database backup scheduled for 2 AM.
-                            </li>
-                             <li className="text-sm p-3 rounded-lg bg-red-50 border border-red-200">
-                                <span className="font-semibold text-red-800">Action Required:</span> Exam cell account expiring in 3 days.
-                            </li>
+                            {notifications.length > 0 ? (
+                                notifications.slice(0, 5).map(notif => (
+                                    <li key={notif.id} className={`text-sm p-3 rounded-lg border ${getNotificationStyle(notif.type)}`}>
+                                        <span className="font-semibold">{notif.type}:</span> {notif.message}
+                                        <div className="text-[10px] opacity-70 mt-1">{notif.timestamp}</div>
+                                    </li>
+                                ))
+                            ) : (
+                                <li className="text-sm text-slate-500 text-center py-4">No new notifications</li>
+                            )}
                         </ul>
                     </CardContent>
                 </Card>

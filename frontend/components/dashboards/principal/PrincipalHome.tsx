@@ -5,8 +5,10 @@ import { useSelector } from 'react-redux';
 import { selectAllDepartments, selectAllUsers } from '../../../store/slices/appSlice';
 import { UserRole, StudentStatus, Student } from '../../../types';
 import Button from '../../ui/Button';
+import { useNavigate } from 'react-router-dom';
 
 const PrincipalHome: React.FC = () => {
+    const navigate = useNavigate();
     const DEPARTMENTS = useSelector(selectAllDepartments);
     const users = useSelector(selectAllUsers);
     const STUDENTS = users.filter(u => u.role === UserRole.STUDENT && (u as any).status !== StudentStatus.ALUMNI) as Student[];
@@ -64,10 +66,10 @@ const PrincipalHome: React.FC = () => {
              <Card>
                 <CardHeader><CardTitle>Quick Reports</CardTitle></CardHeader>
                 <CardContent className="flex flex-col space-y-3">
-                   <Button className="w-full">
+                   <Button className="w-full" onClick={() => navigate('/reports')}>
                         Export Performance
                     </Button>
-                    <Button variant="secondary" className="w-full">
+                    <Button variant="secondary" className="w-full" onClick={() => navigate('/reports')}>
                         Export Attendance
                     </Button>
                 </CardContent>

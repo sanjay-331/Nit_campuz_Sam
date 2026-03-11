@@ -20,6 +20,7 @@ import ExamCellDashboard from '../components/dashboards/ExamCellDashboard.tsx';
 import ProfilePage from './Profile.tsx';
 import PermissionsPage from './Permissions.tsx';
 import UserProfilePage from './UserProfile.tsx';
+import HelpPage from './Help.tsx';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -51,22 +52,53 @@ const DashboardPage: React.FC = () => {
 
   React.useEffect(() => {
     if (user) {
-      dispatch(fetchUsersRequest());
+      // Basic common data
       dispatch(fetchDepartmentsRequest());
       dispatch(fetchCoursesRequest());
-      dispatch(fetchAssignmentsRequest());
-      dispatch(fetchSubmissionsRequest());
-      dispatch(fetchMarksRequest());
-      dispatch(fetchAttendanceRequest());
-      dispatch(fetchMaterialsRequest());
-      dispatch(fetchExamSchedulesRequest());
-      dispatch(fetchMentorAssignmentsRequest());
-      dispatch(fetchRemarksRequest());
-      dispatch(fetchTutorsRequest());
-      dispatch(fetchTutorApplicationsRequest());
-      dispatch(fetchTutoringSessionsRequest());
-      dispatch(fetchOnDutyApplicationsRequest());
-      dispatch(fetchNoDuesCertificatesRequest());
+
+      // Role-specific data fetching
+      switch (user.role) {
+        case UserRole.ADMIN:
+          dispatch(fetchUsersRequest());
+          dispatch(fetchOnDutyApplicationsRequest());
+          dispatch(fetchNoDuesCertificatesRequest());
+          dispatch(fetchTutorApplicationsRequest());
+          break;
+        case UserRole.PRINCIPAL:
+          dispatch(fetchOnDutyApplicationsRequest());
+          dispatch(fetchNoDuesCertificatesRequest());
+          break;
+        case UserRole.HOD:
+          dispatch(fetchUsersRequest()); // Only for their dept ideally, but current backend fetches all
+          dispatch(fetchOnDutyApplicationsRequest());
+          dispatch(fetchTutorApplicationsRequest());
+          dispatch(fetchNoDuesCertificatesRequest());
+          break;
+        case UserRole.STAFF:
+          dispatch(fetchAttendanceRequest());
+          dispatch(fetchMarksRequest());
+          dispatch(fetchMaterialsRequest());
+          dispatch(fetchAssignmentsRequest());
+          dispatch(fetchSubmissionsRequest());
+          dispatch(fetchOnDutyApplicationsRequest());
+          break;
+        case UserRole.STUDENT:
+          dispatch(fetchAssignmentsRequest());
+          dispatch(fetchMarksRequest());
+          dispatch(fetchAttendanceRequest());
+          dispatch(fetchMaterialsRequest());
+          dispatch(fetchExamSchedulesRequest());
+          dispatch(fetchMentorAssignmentsRequest());
+          dispatch(fetchRemarksRequest());
+          dispatch(fetchTutorsRequest());
+          dispatch(fetchTutoringSessionsRequest());
+          dispatch(fetchOnDutyApplicationsRequest()); // For their own applications
+          break;
+        case UserRole.EXAM_CELL:
+          dispatch(fetchExamSchedulesRequest());
+          dispatch(fetchMarksRequest());
+          break;
+      }
     }
   }, [dispatch, user]);
 
@@ -99,6 +131,7 @@ const DashboardPage: React.FC = () => {
         <Route path="/profile" element={<AnimatedPage><ProfilePage /></AnimatedPage>} />
         <Route path="/profile/:userId" element={<AnimatedPage><UserProfilePage /></AnimatedPage>} />
         <Route path="/permissions" element={<AnimatedPage><PermissionsPage /></AnimatedPage>} />
+        <Route path="/help" element={<AnimatedPage><HelpPage /></AnimatedPage>} />
         <Route path="/*" element={renderDashboard()} />
       </Routes>
       <AIChatbot />

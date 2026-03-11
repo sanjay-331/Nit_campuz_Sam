@@ -17,10 +17,10 @@ const PromoteStudents: React.FC = () => {
 
     const [confirmAction, setConfirmAction] = useState<any>(null);
 
-    // --- S&H Transfer Logic ---
+    // --- First Year Transfer Logic ---
     const shStudents = useMemo(() => {
-        return allUsers.filter(u => 
-            u.role === UserRole.STUDENT && 
+        return allUsers.filter(u =>
+            u.role === UserRole.STUDENT &&
             u.departmentId === 'd4' && // Science & Humanities ID
             (u as Student).year === 1
         ) as Student[];
@@ -41,7 +41,7 @@ const PromoteStudents: React.FC = () => {
     const [sectionTransferState, setSectionTransferState] = useState<Record<string, { students: Student[], targetDepartmentId: string }>>(shSections);
 
     const targetDepartments = useMemo(() => {
-        return allDepartments.filter(d => d.id !== 'd4'); // Exclude S&H
+        return allDepartments.filter(d => d.id !== 'd4'); // Exclude First Year
     }, [allDepartments]);
 
     const handleTargetDeptChange = (section: string, departmentId: string) => {
@@ -50,11 +50,11 @@ const PromoteStudents: React.FC = () => {
             [section]: { ...prev[section], targetDepartmentId: departmentId }
         }));
     };
-    
+
     const handleTransfer = (section: string) => {
         const { students, targetDepartmentId } = sectionTransferState[section];
         if (students.length === 0 || !targetDepartmentId) return;
-        
+
         dispatch(transferStudentsRequest({
             studentIds: students.map(s => s.id),
             newDepartmentId: targetDepartmentId,
@@ -88,7 +88,7 @@ const PromoteStudents: React.FC = () => {
             };
         }).sort((a, b) => a.departmentName.localeCompare(b.departmentName) || a.year - b.year);
     }, [allUsers, allDepartments]);
-    
+
     const handlePromote = (departmentId: string, year: number) => {
         dispatch(promoteClassRequest({ departmentId, year }));
         setConfirmAction(null);
@@ -108,7 +108,7 @@ const PromoteStudents: React.FC = () => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        
+
             <div>
                 <h1 className="text-3xl font-bold">Class-wise Promotion</h1>
                 <p className="text-gray-500">Promote entire classes or sections in bulk.</p>
@@ -116,7 +116,7 @@ const PromoteStudents: React.FC = () => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>First Year S&H Transfer</CardTitle>
+                    <CardTitle>First Year First Year Transfer</CardTitle>
                     <CardDescription>Transfer sections of first-year students to their new departments for the second year.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -126,30 +126,31 @@ const PromoteStudents: React.FC = () => {
                             {Object.keys(sectionTransferState).map((section) => {
                                 const data = sectionTransferState[section];
                                 return (
-                                <div key={section} className="p-4 border rounded-xl bg-slate-50 space-y-3">
-                                    <h3 className="font-bold">Section {section}</h3>
-                                    <p className="text-sm text-slate-600">{data.students.length} students</p>
-                                    <Select value={data.targetDepartmentId} onValueChange={(val) => handleTargetDeptChange(section, val)}>
-                                        <SelectTrigger><SelectValue placeholder="Select Target Dept..." /></SelectTrigger>
-                                        <SelectContent>{targetDepartments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
-                                    </Select>
-                                    <Button size="sm" className="w-full" disabled={!data.targetDepartmentId} onClick={() => setConfirmAction({
-                                        description: `Are you sure you want to transfer all ${data.students.length} students from Section ${section} to the ${targetDepartments.find(d => d.id === data.targetDepartmentId)?.name} department? This will also promote them to 2nd Year.`,
-                                        action: () => handleTransfer(section)
-                                    })}>
-                                        Transfer Section {section}
-                                    </Button>
-                                </div>
-                            )})}
+                                    <div key={section} className="p-4 border rounded-xl bg-slate-50 space-y-3">
+                                        <h3 className="font-bold">Section {section}</h3>
+                                        <p className="text-sm text-slate-600">{data.students.length} students</p>
+                                        <Select value={data.targetDepartmentId} onValueChange={(val) => handleTargetDeptChange(section, val)}>
+                                            <SelectTrigger><SelectValue placeholder="Select Target Dept..." /></SelectTrigger>
+                                            <SelectContent>{targetDepartments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                                        </Select>
+                                        <Button size="sm" className="w-full" disabled={!data.targetDepartmentId} onClick={() => setConfirmAction({
+                                            description: `Are you sure you want to transfer all ${data.students.length} students from Section ${section} to the ${targetDepartments.find(d => d.id === data.targetDepartmentId)?.name} department? This will also promote them to 2nd Year.`,
+                                            action: () => handleTransfer(section)
+                                        })}>
+                                            Transfer Section {section}
+                                        </Button>
+                                    </div>
+                                )
+                            })}
                         </div>
                     ) : (
-                        <EmptyState title="No S&H Students" message="There are currently no first-year students in the Science & Humanities department." />
+                        <EmptyState title="No First Year Students" message="There are currently no first-year students in the Science & Humanities department." />
                     )}
                 </CardContent>
             </Card>
 
             <Card>
-                 <CardHeader>
+                <CardHeader>
                     <CardTitle>Yearly Class Promotion</CardTitle>
                     <CardDescription>Promote classes to the next year or graduate final year students.</CardDescription>
                 </CardHeader>
@@ -160,22 +161,23 @@ const PromoteStudents: React.FC = () => {
                                 const isFinalYear = cls.year === 4;
                                 const actionText = isFinalYear ? 'Graduate Class' : `Promote to ${cls.year + 1}rd Year`;
                                 return (
-                                <div key={cls.key} className="p-4 border rounded-xl bg-slate-50 space-y-3 flex flex-col">
-                                    <div className="flex-grow">
-                                        <h3 className="font-bold">{cls.departmentName}</h3>
-                                        <p className="text-sm text-slate-600">{cls.year}{cls.year === 2 ? 'nd' : cls.year === 3 ? 'rd' : 'th'} Year - {cls.studentCount} students</p>
+                                    <div key={cls.key} className="p-4 border rounded-xl bg-slate-50 space-y-3 flex flex-col">
+                                        <div className="flex-grow">
+                                            <h3 className="font-bold">{cls.departmentName}</h3>
+                                            <p className="text-sm text-slate-600">{cls.year}{cls.year === 2 ? 'nd' : cls.year === 3 ? 'rd' : 'th'} Year - {cls.studentCount} students</p>
+                                        </div>
+                                        <Button size="sm" className="w-full" onClick={() => setConfirmAction({
+                                            description: isFinalYear ? `Are you sure you want to graduate all ${cls.studentCount} students from ${cls.departmentName}? Their status will be changed to Alumni.` : `Are you sure you want to promote all ${cls.studentCount} students from ${cls.departmentName} ${cls.year}th Year to the next year?`,
+                                            action: () => handlePromote(cls.departmentId, cls.year)
+                                        })}>
+                                            {actionText}
+                                        </Button>
                                     </div>
-                                    <Button size="sm" className="w-full" onClick={() => setConfirmAction({
-                                        description: isFinalYear ? `Are you sure you want to graduate all ${cls.studentCount} students from ${cls.departmentName}? Their status will be changed to Alumni.` : `Are you sure you want to promote all ${cls.studentCount} students from ${cls.departmentName} ${cls.year}th Year to the next year?`,
-                                        action: () => handlePromote(cls.departmentId, cls.year)
-                                    })}>
-                                        {actionText}
-                                    </Button>
-                                </div>
-                            )})}
+                                )
+                            })}
                         </div>
                     ) : (
-                         <EmptyState title="No Classes to Promote" message="All classes are either first years in S&H or have already been promoted." />
+                        <EmptyState title="No Classes to Promote" message="All classes are either first years in First Year or have already been promoted." />
                     )}
                 </CardContent>
             </Card>

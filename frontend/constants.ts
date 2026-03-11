@@ -3,68 +3,68 @@
 import { UserRole, User, Department, Course, Student, Staff, Mark, Attendance, ActivityLog, StudentStatus, Alumnus, ClassInDepartment, Reminder, TodaysClass, UpcomingEvent, Permission, Notification, Assignment, Material, Book, ExamSchedule, Grade, StudentSubmission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate } from './types';
 
 export const GRADE_POINTS: Record<Grade, number> = {
-  'O': 10,
-  'A+': 9,
-  'A': 8,
-  'B+': 7,
-  'B': 6,
-  'C': 5,
-  'RA': 0,
-  'SA': 0,
-  'W': 0,
+    'O': 10,
+    'A+': 9,
+    'A': 8,
+    'B+': 7,
+    'B': 6,
+    'C': 5,
+    'RA': 0,
+    'SA': 0,
+    'W': 0,
 };
 
 export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
-  [Permission.MANAGE_USERS]: 'Create, edit, and delete user accounts.',
-  [Permission.VIEW_USERS]: 'View lists of users and their basic profiles.',
-  [Permission.MANAGE_DEPARTMENTS]: 'Create, edit, and manage academic departments.',
-  [Permission.VIEW_DEPARTMENTS]: 'View department information and structure.',
-  [Permission.VIEW_LOGS]: 'Access system-wide activity logs.',
-  [Permission.CONFIGURE_SYSTEM]: 'Change system-level settings and configurations.',
-  [Permission.MANAGE_ALUMNI]: 'Manage the alumni database and records.',
-  [Permission.PROMOTE_STUDENTS]: 'Promote students to the next year or graduate them.',
-  [Permission.GENERATE_REPORTS]: 'Generate and export institutional reports.',
+    [Permission.MANAGE_USERS]: 'Create, edit, and delete user accounts.',
+    [Permission.VIEW_USERS]: 'View lists of users and their basic profiles.',
+    [Permission.MANAGE_DEPARTMENTS]: 'Create, edit, and manage academic departments.',
+    [Permission.VIEW_DEPARTMENTS]: 'View department information and structure.',
+    [Permission.VIEW_LOGS]: 'Access system-wide activity logs.',
+    [Permission.CONFIGURE_SYSTEM]: 'Change system-level settings and configurations.',
+    [Permission.MANAGE_ALUMNI]: 'Manage the alumni database and records.',
+    [Permission.PROMOTE_STUDENTS]: 'Promote students to the next year or graduate them.',
+    [Permission.GENERATE_REPORTS]: 'Generate and export institutional reports.',
 };
 
 export let DEPARTMENTS: Department[] = [
-  { id: 'd1', name: 'Computer Science' },
-  { id: 'd2', name: 'Mechanical Engineering' },
-  { id: 'd3', name: 'Civil Engineering' },
-  { id: 'd4', name: 'Science & Humanities' },
+    { id: 'd1', name: 'Computer Science' },
+    { id: 'd2', name: 'Mechanical Engineering' },
+    { id: 'd3', name: 'Civil Engineering' },
+    { id: 'd4', name: 'Science & Humanities' },
 ];
 
 export let USERS: (User | Student | Staff | Alumnus)[] = [
-  // Admins
-  { id: 'u1', name: 'Admin User', email: 'admin@lms.com', role: UserRole.ADMIN, status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS, Permission.MANAGE_USERS, Permission.MANAGE_DEPARTMENTS, Permission.VIEW_LOGS, Permission.CONFIGURE_SYSTEM, Permission.MANAGE_ALUMNI, Permission.GENERATE_REPORTS, Permission.PROMOTE_STUDENTS] },
-  // Principals
-  { id: 'u2', name: 'Dr. Evelyn Reed', email: 'principal@lms.com', role: UserRole.PRINCIPAL, status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS, Permission.VIEW_DEPARTMENTS, Permission.GENERATE_REPORTS] },
-  // HODs
-  { id: 'u3', name: 'Dr. Alan Grant', email: 'hod.cs@lms.com', role: UserRole.HOD, departmentId: 'd1', status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS] },
-  { id: 'u4', name: 'Dr. Ian Malcolm', email: 'hod.mech@lms.com', role: UserRole.HOD, departmentId: 'd2', status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS] },
-  // Staff
-  { id: 'u5', name: 'Prof. Ellie Sattler', email: 'staff.cs1@lms.com', role: UserRole.STAFF, departmentId: 'd1', status: StudentStatus.ACTIVE, permissions: [] },
-  { id: 'u6', name: 'Prof. Robert Muldoon', email: 'staff.cs2@lms.com', role: UserRole.STAFF, departmentId: 'd1', status: StudentStatus.ACTIVE, permissions: [] },
-  { id: 'u7', name: 'Prof. John Hammond', email: 'staff.mech1@lms.com', role: UserRole.STAFF, departmentId: 'd2', status: StudentStatus.ACTIVE, permissions: [] },
-  { id: 'u14', name: 'Dr. Sarah Harding', email: 'staff.sh1@lms.com', role: UserRole.HOD, departmentId: 'd4', status: StudentStatus.ACTIVE, permissions: [Permission.PROMOTE_STUDENTS] },
-  // Students
-  { id: 'u8', name: 'Alice Johnson', email: 'student.cs1@lms.com', role: UserRole.STUDENT, regNo: 'CS22001', section: 'A', admissionYear: 2022, departmentId: 'd1', year: 2, cgpa: 8.73, sgpa: [{ semester: 1, gpa: 8.43 }, { semester: 2, gpa: 9.0 }, { semester: 3, gpa: 9.0 }], status: StudentStatus.ACTIVE, permissions: [], phone: '9876543210', address: '123 Tech Park, Silicon Valley', photoUrl: 'https://i.pravatar.cc/150?u=u8', totalWorkingDays: 270, daysPresent: 255, dues: { library: true, department: true, accounts: true } },
-  { id: 'u9', name: 'Bob Smith', email: 'student.cs2@lms.com', role: UserRole.STUDENT, regNo: 'CS21002', section: 'B', admissionYear: 2021, departmentId: 'd1', year: 3, cgpa: 8.59, sgpa: [{ semester: 1, gpa: 8.57 }, { semester: 2, gpa: 8.5 }, { semester: 3, gpa: 8.0 }, { semester: 4, gpa: 8.0 }, { semester: 5, gpa: 10.0 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: false, department: true, accounts: true } },
-  { id: 'u15', name: 'Carol White', email: 'student.cs3@lms.com', role: UserRole.STUDENT, regNo: 'CS20003', section: 'A', admissionYear: 2020, departmentId: 'd1', year: 4, cgpa: 8.22, sgpa: [{ semester: 1, gpa: 7.57 }, { semester: 2, gpa: 8.0 }, { semester: 3, gpa: 8.0 }, { semester: 4, gpa: 9.0 }, { semester: 5, gpa: 9.0 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
-  { id: 'u10', name: 'Charlie Brown', email: 'student.mech1@lms.com', role: UserRole.STUDENT, regNo: 'ME20001', section: 'A', admissionYear: 2020, departmentId: 'd2', year: 4, cgpa: 7.8, sgpa: [{ semester: 7, gpa: 7.0 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
-  { id: 'u11', name: 'Diana Prince', email: 'student.mech2@lms.com', role: UserRole.STUDENT, regNo: 'ME22002', section: 'B', admissionYear: 2022, departmentId: 'd2', year: 2, cgpa: 9.21, sgpa: [{ semester: 1, gpa: 9.5 }, { semester: 2, gpa: 9.0 }, { semester: 3, gpa: 9.0 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: false } },
-  { id: 'u16', name: 'Eve Adams', email: 'student.civil1@lms.com', role: UserRole.STUDENT, regNo: 'CE21001', section: 'A', admissionYear: 2021, departmentId: 'd3', year: 3, cgpa: 8.1, sgpa: [], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
-  { id: 'u19', name: 'Mira', email: 'mira@lms.com', role: UserRole.STUDENT, regNo: 'CS21005', section: 'A', admissionYear: 2021, departmentId: 'd1', year: 3, cgpa: 9.67, sgpa: [{ semester: 1, gpa: 10.0 }, { semester: 2, gpa: 10.0 }, { semester: 3, gpa: 9.0 }], status: StudentStatus.ACTIVE, permissions: [], phone: '8765432109', address: '456 Innovation Drive, Cyber City', photoUrl: 'https://i.pravatar.cc/150?u=u19', totalWorkingDays: 90, daysPresent: 85, dues: { library: true, department: true, accounts: true } },
-  // New S&H Students
-  { id: 'u20', name: 'Frank Castle', email: 'sh.s1@lms.com', role: UserRole.STUDENT, regNo: 'SH23001', section: 'A', admissionYear: 2023, departmentId: 'd4', year: 1, cgpa: 8.9, sgpa: [{ semester: 1, gpa: 8.9 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: false, accounts: true } },
-  { id: 'u21', name: 'Gwen Stacy', email: 'sh.s2@lms.com', role: UserRole.STUDENT, regNo: 'SH23002', section: 'B', admissionYear: 2023, departmentId: 'd4', year: 1, cgpa: 9.1, sgpa: [{ semester: 1, gpa: 9.1 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
-  { id: 'u22', name: 'Harish Kumar', email: 'sh.s3@lms.com', role: UserRole.STUDENT, regNo: 'SH23003', section: 'A', admissionYear: 2023, departmentId: 'd4', year: 1, cgpa: 8.5, sgpa: [{ semester: 1, gpa: 8.5 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
+    // Admins
+    { id: 'u1', name: 'Admin User', email: 'admin@lms.com', role: UserRole.ADMIN, status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS, Permission.MANAGE_USERS, Permission.MANAGE_DEPARTMENTS, Permission.VIEW_LOGS, Permission.CONFIGURE_SYSTEM, Permission.MANAGE_ALUMNI, Permission.GENERATE_REPORTS, Permission.PROMOTE_STUDENTS] },
+    // Principals
+    { id: 'u2', name: 'Dr. Evelyn Reed', email: 'principal@lms.com', role: UserRole.PRINCIPAL, status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS, Permission.VIEW_DEPARTMENTS, Permission.GENERATE_REPORTS] },
+    // HODs
+    { id: 'u3', name: 'Dr. Alan Grant', email: 'hod.cs@lms.com', role: UserRole.HOD, departmentId: 'd1', status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS] },
+    { id: 'u4', name: 'Dr. Ian Malcolm', email: 'hod.mech@lms.com', role: UserRole.HOD, departmentId: 'd2', status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS] },
+    // Staff
+    { id: 'u5', name: 'Prof. Ellie Sattler', email: 'staff.cs1@lms.com', role: UserRole.STAFF, departmentId: 'd1', status: StudentStatus.ACTIVE, permissions: [] },
+    { id: 'u6', name: 'Prof. Robert Muldoon', email: 'staff.cs2@lms.com', role: UserRole.STAFF, departmentId: 'd1', status: StudentStatus.ACTIVE, permissions: [] },
+    { id: 'u7', name: 'Prof. John Hammond', email: 'staff.mech1@lms.com', role: UserRole.STAFF, departmentId: 'd2', status: StudentStatus.ACTIVE, permissions: [] },
+    { id: 'u14', name: 'Dr. Sarah Harding', email: 'staff.sh1@lms.com', role: UserRole.HOD, departmentId: 'd4', status: StudentStatus.ACTIVE, permissions: [Permission.PROMOTE_STUDENTS] },
+    // Students
+    { id: 'u8', name: 'Alice Johnson', email: 'student.cs1@lms.com', role: UserRole.STUDENT, regNo: 'CS22001', section: 'A', admissionYear: 2022, departmentId: 'd1', year: 2, cgpa: 8.73, sgpa: [{ semester: 1, gpa: 8.43 }, { semester: 2, gpa: 9.0 }, { semester: 3, gpa: 9.0 }], status: StudentStatus.ACTIVE, permissions: [], phone: '9876543210', address: '123 Tech Park, Silicon Valley', photoUrl: 'https://i.pravatar.cc/150?u=u8', totalWorkingDays: 270, daysPresent: 255, dues: { library: true, department: true, accounts: true } },
+    { id: 'u9', name: 'Bob Smith', email: 'student.cs2@lms.com', role: UserRole.STUDENT, regNo: 'CS21002', section: 'B', admissionYear: 2021, departmentId: 'd1', year: 3, cgpa: 8.59, sgpa: [{ semester: 1, gpa: 8.57 }, { semester: 2, gpa: 8.5 }, { semester: 3, gpa: 8.0 }, { semester: 4, gpa: 8.0 }, { semester: 5, gpa: 10.0 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: false, department: true, accounts: true } },
+    { id: 'u15', name: 'Carol White', email: 'student.cs3@lms.com', role: UserRole.STUDENT, regNo: 'CS20003', section: 'A', admissionYear: 2020, departmentId: 'd1', year: 4, cgpa: 8.22, sgpa: [{ semester: 1, gpa: 7.57 }, { semester: 2, gpa: 8.0 }, { semester: 3, gpa: 8.0 }, { semester: 4, gpa: 9.0 }, { semester: 5, gpa: 9.0 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
+    { id: 'u10', name: 'Charlie Brown', email: 'student.mech1@lms.com', role: UserRole.STUDENT, regNo: 'ME20001', section: 'A', admissionYear: 2020, departmentId: 'd2', year: 4, cgpa: 7.8, sgpa: [{ semester: 7, gpa: 7.0 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
+    { id: 'u11', name: 'Diana Prince', email: 'student.mech2@lms.com', role: UserRole.STUDENT, regNo: 'ME22002', section: 'B', admissionYear: 2022, departmentId: 'd2', year: 2, cgpa: 9.21, sgpa: [{ semester: 1, gpa: 9.5 }, { semester: 2, gpa: 9.0 }, { semester: 3, gpa: 9.0 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: false } },
+    { id: 'u16', name: 'Eve Adams', email: 'student.civil1@lms.com', role: UserRole.STUDENT, regNo: 'CE21001', section: 'A', admissionYear: 2021, departmentId: 'd3', year: 3, cgpa: 8.1, sgpa: [], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
+    { id: 'u19', name: 'Mira', email: 'mira@lms.com', role: UserRole.STUDENT, regNo: 'CS21005', section: 'A', admissionYear: 2021, departmentId: 'd1', year: 3, cgpa: 9.67, sgpa: [{ semester: 1, gpa: 10.0 }, { semester: 2, gpa: 10.0 }, { semester: 3, gpa: 9.0 }], status: StudentStatus.ACTIVE, permissions: [], phone: '8765432109', address: '456 Innovation Drive, Cyber City', photoUrl: 'https://i.pravatar.cc/150?u=u19', totalWorkingDays: 90, daysPresent: 85, dues: { library: true, department: true, accounts: true } },
+    // New First Year Students
+    { id: 'u20', name: 'Frank Castle', email: 'sh.s1@lms.com', role: UserRole.STUDENT, regNo: 'SH23001', section: 'A', admissionYear: 2023, departmentId: 'd4', year: 1, cgpa: 8.9, sgpa: [{ semester: 1, gpa: 8.9 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: false, accounts: true } },
+    { id: 'u21', name: 'Gwen Stacy', email: 'sh.s2@lms.com', role: UserRole.STUDENT, regNo: 'SH23002', section: 'B', admissionYear: 2023, departmentId: 'd4', year: 1, cgpa: 9.1, sgpa: [{ semester: 1, gpa: 9.1 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
+    { id: 'u22', name: 'Harish Kumar', email: 'sh.s3@lms.com', role: UserRole.STUDENT, regNo: 'SH23003', section: 'A', admissionYear: 2023, departmentId: 'd4', year: 1, cgpa: 8.5, sgpa: [{ semester: 1, gpa: 8.5 }], status: StudentStatus.ACTIVE, permissions: [], dues: { library: true, department: true, accounts: true } },
 
-  // Exam Cell
-  { id: 'u12', name: 'Ray Arnold', email: 'examcell@lms.com', role: UserRole.EXAM_CELL, status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS, Permission.GENERATE_REPORTS] },
-  // Alumni
-  { id: 'u13', name: 'Peter Parker', email: 'alumni.cs1@lms.com', role: UserRole.STUDENT, status: StudentStatus.ALUMNI, regNo: 'CS2020001', section: 'A', admissionYear: 2020, year: 4, departmentId: 'd1', graduationYear: 2023, finalCgpa: 9.5, cgpa: 9.5, sgpa: [], job: 'Software Engineer', company: 'Google', location: 'Mountain View, CA', phone: 'peter.p@example.com', permissions: [], dues: { library: true, department: true, accounts: true } },
-  { id: 'u17', name: 'Mary Jane Watson', email: 'alumni.cs2@lms.com', role: UserRole.STUDENT, status: StudentStatus.ALUMNI, regNo: 'CS2019002', section: 'A', admissionYear: 2019, year: 4, departmentId: 'd1', graduationYear: 2022, finalCgpa: 9.2, cgpa: 9.2, sgpa: [], job: 'Product Manager', company: 'Microsoft', location: 'Redmond, WA', phone: 'mj.w@example.com', permissions: [], dues: { library: true, department: true, accounts: true } },
-  { id: 'u18', name: 'Harry Osborn', email: 'alumni.mech1@lms.com', role: UserRole.STUDENT, status: StudentStatus.ALUMNI, regNo: 'ME2020005', section: 'A', admissionYear: 2020, year: 4, departmentId: 'd2', graduationYear: 2023, finalCgpa: 8.8, cgpa: 8.8, sgpa: [], job: 'Mechanical Designer', company: 'Tesla', location: 'Austin, TX', phone: 'harry.o@example.com', permissions: [], dues: { library: true, department: true, accounts: true } }
+    // Exam Cell
+    { id: 'u12', name: 'Ray Arnold', email: 'examcell@lms.com', role: UserRole.EXAM_CELL, status: StudentStatus.ACTIVE, permissions: [Permission.VIEW_USERS, Permission.GENERATE_REPORTS] },
+    // Alumni
+    { id: 'u13', name: 'Peter Parker', email: 'alumni.cs1@lms.com', role: UserRole.STUDENT, status: StudentStatus.ALUMNI, regNo: 'CS2020001', section: 'A', admissionYear: 2020, year: 4, departmentId: 'd1', graduationYear: 2023, finalCgpa: 9.5, cgpa: 9.5, sgpa: [], job: 'Software Engineer', company: 'Google', location: 'Mountain View, CA', phone: 'peter.p@example.com', permissions: [], dues: { library: true, department: true, accounts: true } },
+    { id: 'u17', name: 'Mary Jane Watson', email: 'alumni.cs2@lms.com', role: UserRole.STUDENT, status: StudentStatus.ALUMNI, regNo: 'CS2019002', section: 'A', admissionYear: 2019, year: 4, departmentId: 'd1', graduationYear: 2022, finalCgpa: 9.2, cgpa: 9.2, sgpa: [], job: 'Product Manager', company: 'Microsoft', location: 'Redmond, WA', phone: 'mj.w@example.com', permissions: [], dues: { library: true, department: true, accounts: true } },
+    { id: 'u18', name: 'Harry Osborn', email: 'alumni.mech1@lms.com', role: UserRole.STUDENT, status: StudentStatus.ALUMNI, regNo: 'ME2020005', section: 'A', admissionYear: 2020, year: 4, departmentId: 'd2', graduationYear: 2023, finalCgpa: 8.8, cgpa: 8.8, sgpa: [], job: 'Mechanical Designer', company: 'Tesla', location: 'Austin, TX', phone: 'harry.o@example.com', permissions: [], dues: { library: true, department: true, accounts: true } }
 ];
 
 export let STUDENTS: Student[] = USERS.filter(u => u.role === UserRole.STUDENT && (u as Student | Alumnus).status !== StudentStatus.ALUMNI) as Student[];
@@ -78,7 +78,7 @@ export let CLASSES: ClassInDepartment[] = [
     { departmentId: 'd2', year: 2, advisorId: 'u7' }, // Mech 2nd year -> Prof. John Hammond
     { departmentId: 'd2', year: 4, advisorId: 'u7' }, // Mech 4th year -> Prof. John Hammond
     { departmentId: 'd3', year: 3, advisorId: 'u7' }, // Civil 3rd year -> Prof. John Hammond (Placeholder)
-    { departmentId: 'd4', year: 1, advisorId: 'u14' }, // S&H 1st year -> Dr. Sarah Harding
+    { departmentId: 'd4', year: 1, advisorId: 'u14' }, // First Year 1st year -> Dr. Sarah Harding
 ];
 
 
@@ -129,7 +129,7 @@ export let MARKS: Mark[] = [
     { courseId: 'c1', studentId: 'u15', semester: 3, internal: 39, exam: 75, grade: 'A', gradePoint: 8.0 },
     { courseId: 'c8', studentId: 'u15', semester: 4, internal: 42, exam: 80, grade: 'A+', gradePoint: 9.0 },
     { courseId: 'c2', studentId: 'u15', semester: 5, internal: 44, exam: 85, grade: 'A+', gradePoint: 9.0 },
-    
+
     // Marks for Mira (u19) - New
     { courseId: 'c6', studentId: 'u19', semester: 1, internal: 47, exam: 94, grade: 'O', gradePoint: 10.0 },
     { courseId: 'c7', studentId: 'u19', semester: 2, internal: 46, exam: 90, grade: 'O', gradePoint: 10.0 },
@@ -153,7 +153,7 @@ export let ATTENDANCE: Attendance[] = [
     { courseId: 'c1', studentId: 'u8', date: '2023-10-10', present: true },
     { courseId: 'c1', studentId: 'u8', date: '2023-10-11', present: true },
     { courseId: 'c1', studentId: 'u8', date: '2023-10-12', present: true },
-    
+
     // Course c5
     { courseId: 'c5', studentId: 'u8', date: '2023-10-02', present: true },
     { courseId: 'c5', studentId: 'u8', date: '2023-10-03', present: true },
@@ -165,9 +165,9 @@ export let ATTENDANCE: Attendance[] = [
 
 // FIX: Completed the ACTIVITY_LOGS array to match the ActivityLog type.
 export let ACTIVITY_LOGS: ActivityLog[] = [
-    {id: 'l1', timestamp: '2023-10-26 10:00:00', user: 'Admin User', action: 'Logged In', ipAddress: '192.168.1.1', browser: 'Chrome'},
-    {id: 'l2', timestamp: '2023-10-26 09:45:12', user: 'Dr. Alan Grant', action: 'Updated staff list for CS department', ipAddress: '203.0.113.25', browser: 'Safari'},
-    {id: 'l3', timestamp: '2023-10-25 18:20:05', user: 'Prof. Ellie Sattler', action: 'Uploaded marks for CS201', ipAddress: '198.51.100.10', browser: 'Firefox'},
+    { id: 'l1', timestamp: '2023-10-26 10:00:00', user: 'Admin User', action: 'Logged In', ipAddress: '192.168.1.1', browser: 'Chrome' },
+    { id: 'l2', timestamp: '2023-10-26 09:45:12', user: 'Dr. Alan Grant', action: 'Updated staff list for CS department', ipAddress: '203.0.113.25', browser: 'Safari' },
+    { id: 'l3', timestamp: '2023-10-25 18:20:05', user: 'Prof. Ellie Sattler', action: 'Uploaded marks for CS201', ipAddress: '198.51.100.10', browser: 'Firefox' },
 ];
 
 // FIX: Added missing NOTIFICATIONS constant.
@@ -218,10 +218,10 @@ export let EXAM_SCHEDULES: ExamSchedule[] = [
 
 // FIX: Added missing DEPARTMENT_PASS_RATES constant.
 export const DEPARTMENT_PASS_RATES = [
-  { name: 'CompSci', passPercentage: 92 },
-  { name: 'Mech', passPercentage: 88 },
-  { name: 'Civil', passPercentage: 85 },
-  { name: 'S & H', passPercentage: 95 },
+    { name: 'CompSci', passPercentage: 92 },
+    { name: 'Mech', passPercentage: 88 },
+    { name: 'Civil', passPercentage: 85 },
+    { name: 'S & H', passPercentage: 95 },
 ];
 // FIX: Added mock data for the Tutoring feature.
 export let TUTORS: Tutor[] = [

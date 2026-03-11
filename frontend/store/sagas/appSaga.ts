@@ -1171,15 +1171,17 @@ function* handleApplyForOD(action: PayloadAction<Omit<OnDutyApplication, 'id' | 
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Application submitted successfully.' }));
+            yield sagaEffects.put(fetchOnDutyApplicationsRequest());
         } else {
              const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
              throw new Error(errorData.message || 'Failed to submit application.');
         }
     } catch (error) {
+         console.error("OD Submission Error:", error);
          if (error instanceof Error) {
             yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
         } else {
-            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to submit application.' }));
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to submit application. Please check your connection.' }));
         }
     }
 }
@@ -1199,6 +1201,7 @@ function* handleProcessOD(action: PayloadAction<{ applicationId: string; decisio
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Application processed.' }));
+            yield sagaEffects.put(fetchOnDutyApplicationsRequest());
         } else {
              const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
              throw new Error(errorData.message || 'Failed to process application.');
@@ -1227,6 +1230,7 @@ function* handleUpdateODApplication(action: PayloadAction<Partial<OnDutyApplicat
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Application updated successfully.' }));
+            yield sagaEffects.put(fetchOnDutyApplicationsRequest());
         } else {
              const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
              throw new Error(errorData.message || 'Failed to update application.');

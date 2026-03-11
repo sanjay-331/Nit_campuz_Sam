@@ -9,7 +9,9 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction): void => {
+import { prisma } from '../db';
+
+export const requireAuth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
@@ -28,9 +30,20 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
     const secret = process.env.JWT_SECRET || 'fallback_secret';
     const decoded = jwt.decode(token, secret);
     
+    // Verify user exists in database
+    const user = await prisma.user.findUnique({ 
+        where: { id: decoded.sub },
+        select: { id: true, role: true }
+    });
+
+    if (!user) {
+        res.status(401).json({ message: 'Invalid session. User not found.' });
+        return;
+    }
+
     req.user = {
-      id: decoded.sub,
-      role: decoded.role,
+      id: user.id,
+      role: user.role,
     };
     
     next();

@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
 import { showToast } from '../store/slices/uiSlice';
+import { addNotification } from '../store/slices/appSlice';
 
 const SOCKET_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5000';
 
@@ -29,10 +30,17 @@ export const useSocket = () => {
             });
 
             // Listen for global or departmental push notifications
-            socket.on('notification', (data: { type: string, message: string, courseId?: string }) => {
+            socket.on('notification', (data: { type: any, message: string, courseId?: string }) => {
+                const newNotification = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    type: data.type || 'Alert',
+                    message: data.message,
+                    timestamp: new Date().toLocaleTimeString(),
+                    read: false
+                };
+                
+                dispatch(addNotification(newNotification));
                 dispatch(showToast({ type: 'success', message: `[${data.type}] ${data.message}` }));
-                // In a robust implementation, you might optionally dispatch an action
-                // to reload assignments or marks if data.courseId matches the current view
             });
 
             socket.on('disconnect', () => {

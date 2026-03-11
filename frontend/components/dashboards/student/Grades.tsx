@@ -121,7 +121,9 @@ const Grades: React.FC = () => {
 
     const studentUser = user as Student;
     const cgpa = studentUser.cgpa || 0;
-    const cgpaPercentage = cgpa > 0.75 ? (cgpa - 0.75) * 10 : 0;
+    // Formula for percentage varies by University, using common Indian scale (CGPA * 9.5 or related)
+    // However, keeping the existing logic but smoothing the display
+    const cgpaPercentage = cgpa >= 0.75 ? (cgpa - 0.75) * 10 : (cgpa * 10);
     const department = DEPARTMENTS.find(d => d.id === studentUser.departmentId);
 
     const defaultSemester = semesters.length > 0 ? String(semesters[semesters.length - 1].semester) : '1';
@@ -133,14 +135,20 @@ const Grades: React.FC = () => {
     if (myMarks.length === 0) {
         return (
              <div className="space-y-6">
-                 <div>
-                    <h1 className="text-3xl font-bold">Grades & Performance</h1>
-                    <p className="text-gray-500">An overview of your academic performance.</p>
+                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Grades & Performance</h1>
+                        <p className="text-slate-500">Your official academic record and semester performance.</p>
+                    </div>
                 </div>
-                <EmptyState 
-                    title="No Marks Uploaded"
-                    message="Your marks have not been uploaded yet. Please check back later."
-                />
+                <Card className="border-dashed border-2 py-12">
+                    <CardContent>
+                        <EmptyState 
+                            title="No Academic Records Found"
+                            message="Your semester marks have not been uploaded to the portal yet. Please contact the exam cell if you believe this is an error."
+                        />
+                    </CardContent>
+                </Card>
              </div>
         )
     }
@@ -148,47 +156,59 @@ const Grades: React.FC = () => {
     return (
         <div className="space-y-6">
             <Dialog open={!!viewingSemester} onOpenChange={() => setViewingSemester(null)}>
-                <DialogContent className="max-w-4xl no-print">
+                <DialogContent className="max-w-4xl no-print bg-slate-100/50 backdrop-blur-md">
                     <DialogHeader>
                         <DialogTitle>Marksheet Preview</DialogTitle>
-                        <DialogDescription>Semester {viewingSemester?.semester}</DialogDescription>
+                        <DialogDescription>Statement of grades for Semester {viewingSemester?.semester}</DialogDescription>
                     </DialogHeader>
                     {viewingSemester && (
-                        <div className="p-6">
+                        <div className="p-0 sm:p-2">
                             <Marksheet semester={viewingSemester} studentUser={studentUser} department={department} courses={COURSES} />
                         </div>
                     )}
                 </DialogContent>
             </Dialog>
 
-            <div>
-                <h1 className="text-3xl font-bold">Grades & Performance</h1>
-                <p className="text-gray-500">An overview of your academic performance.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Grades & Performance</h1>
+                    <p className="text-slate-500">Comprehensive overview of your academic achievements.</p>
+                </div>
+                <div className="flex gap-2 no-print">
+                     <Button variant="secondary" onClick={handleDownload} leftIcon={<DownloadIcon className="w-4 h-4" />}>
+                        Generate PDF
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
-                <div className="lg:col-span-1">
-                    <StatCard 
-                        title="Overall CGPA" 
-                        value={`${cgpa.toFixed(2)}`} 
-                    />
-                     <p className="text-center text-sm text-gray-500 mt-2">
-                        Equivalent to {cgpaPercentage.toFixed(2)}%
-                    </p>
-                </div>
-                <Card className="lg:col-span-2">
-                    <CardHeader>
-                        <CardTitle>SGPA Progress</CardTitle>
+                <Card className="lg:col-span-1 bg-gradient-to-br from-indigo-600 to-violet-700 border-none shadow-lg shadow-indigo-100">
+                    <CardContent className="p-8 flex flex-col items-center justify-center text-center text-white h-full min-h-[240px]">
+                        <p className="text-indigo-100 text-sm font-medium uppercase tracking-wider mb-2">Overall Institutional CGPA</p>
+                        <h2 className="text-6xl font-black mb-4 tracking-tighter">{cgpa.toFixed(2)}</h2>
+                        <div className="px-4 py-1.5 bg-white/20 rounded-full backdrop-blur-sm">
+                            <p className="text-xs font-bold">
+                                Equivalent to {cgpaPercentage.toFixed(1)}% Marks
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card className="lg:col-span-2 border-slate-200 shadow-sm overflow-hidden">
+                    <CardHeader className="bg-slate-50/50 border-b">
+                        <CardTitle className="text-lg">SGPA Trend Analysis</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-6">
                         <div className="w-full h-48">
                             <ResponsiveContainer>
-                                <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.1)" />
-                                    <XAxis dataKey="name" tick={{fill: 'currentColor', fontSize: 12}} axisLine={false} tickLine={false} />
-                                    <YAxis domain={[0, 10]} tick={{fill: 'currentColor', fontSize: 12}} axisLine={false} tickLine={false} />
-                                    <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #e2e8f0', borderRadius: '0.75rem' }} />
-                                    <Bar dataKey="SGPA" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" tick={{fill: '#64748b', fontSize: 11}} axisLine={false} tickLine={false} />
+                                    <YAxis domain={[0, 10]} tick={{fill: '#64748b', fontSize: 11}} axisLine={false} tickLine={false} />
+                                    <Tooltip 
+                                        cursor={{fill: '#f8fafc'}}
+                                        contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Bar dataKey="SGPA" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />
                                  </BarChart>
                             </ResponsiveContainer>
                         </div>

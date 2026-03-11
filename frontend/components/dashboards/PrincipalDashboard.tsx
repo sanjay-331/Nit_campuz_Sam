@@ -9,6 +9,7 @@ import Directory from './principal/Directory';
 import DepartmentView from './principal/DepartmentView';
 import ODApprovals from './staff/ODApprovals';
 import DocumentVerification from './admin/DocumentVerification.tsx';
+import Reports from './principal/Reports';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -41,7 +42,7 @@ const PrincipalDashboard: React.FC = () => {
             <Route path="/directory" element={<AnimatedPage><Directory /></AnimatedPage>} />
             <Route path="/departments" element={<AnimatedPage><DepartmentView /></AnimatedPage>} />
             <Route path="/approvals" element={<AnimatedPage><ODApprovals /></AnimatedPage>} />
-            {/* Reports page can be added later */}
+            <Route path="/reports" element={<AnimatedPage><Reports /></AnimatedPage>} />
             <Route path="/verifications" element={<AnimatedPage><DocumentVerification /></AnimatedPage>} />
         </Routes>
     );

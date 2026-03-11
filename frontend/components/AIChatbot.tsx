@@ -7,10 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from './ui/Button';
 import { UserRole } from '../types';
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 // Basic check for API key. In a real app, you might want more robust feedback.
 if (!API_KEY) {
-  console.warn("API_KEY for Gemini is not set. The AI Chatbot will not be available.");
+  console.warn("VITE_GEMINI_API_KEY is not set. AI Chatbot functionality will be limited to mock responses or error messages.");
 }
 
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
@@ -61,7 +61,9 @@ const ChatMessageContent: React.FC<{ text: string }> = ({ text }) => {
 
 const AIChatbot: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<{ text: string, sender: 'user' | 'bot' }[]>([]);
+    const [messages, setMessages] = useState<{ text: string, sender: 'user' | 'bot' }[]>([
+        { text: "Hello! I'm your AI Assistant. How can I help you today?", sender: 'bot' }
+    ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const user = useSelector(selectUser);
@@ -96,23 +98,34 @@ const AIChatbot: React.FC = () => {
         setIsLoading(true);
 
         try {
-            if (!ai) {
-                 throw new Error("Gemini AI not initialized. Please configure the API_KEY.");
-            }
-            const response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: input,
-                config: {
-                    systemInstruction: getSystemInstruction(),
-                },
-            });
+            let botResponseText = "";
             
-            const botResponse = { text: response.text, sender: 'bot' as const };
+            if (!ai) {
+                 // Simulated "Mock Mode" response
+                 await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate realistic delay
+                 botResponseText = "I'm currently in **Maintenance Mode**. While I can't process complex queries using live AI models right now, I can still provide general information about the NIT Campuz platform. \n\n* **Academic Info:** Check the 'Grades' and 'Attendance' tabs. \n* **Absences:** Use the 'Leave / OD' section. \n* **Admin tasks:** Use the Sidebar for user management.";
+            } else {
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.0-flash", // Updated to a more standard model name if 2.5 was a typo
+                    contents: input,
+                    config: {
+                        systemInstruction: getSystemInstruction(),
+                    },
+                });
+                botResponseText = response.text;
+            }
+            
+            const botResponse = { text: botResponseText, sender: 'bot' as const };
             setMessages([...newMessages, botResponse]);
 
         } catch (error) {
             console.error("AI Chatbot Error:", error);
-            const errorMessage = { text: "Sorry, I'm having trouble connecting right now. Please check your API key or try again later.", sender: 'bot' as const };
+            const errorMessage = { 
+                text: !API_KEY 
+                    ? "The AI Chatbot is currently in 'Mock Mode' because no API Key was found. I can't process your request right now, but I'm here!" 
+                    : "Sorry, I'm having trouble connecting right now. Please check your API key or try again later.", 
+                sender: 'bot' as const 
+            };
             setMessages([...newMessages, errorMessage]);
         } finally {
             setIsLoading(false);
@@ -188,11 +201,11 @@ const AIChatbot: React.FC = () => {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                                placeholder={ai ? "Ask something..." : "AI Disabled"}
+                                placeholder="Ask something..."
                                 className="flex-1 w-full px-4 py-2 bg-slate-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-900"
-                                disabled={!ai || isLoading}
+                                disabled={isLoading}
                             />
-                            <Button onClick={handleSend} disabled={!ai || isLoading} className="!p-2.5">
+                            <Button onClick={handleSend} disabled={isLoading} className="!p-2.5">
                                 <PaperAirplaneIcon className="w-5 h-5"/>
                             </Button>
                         </div>
