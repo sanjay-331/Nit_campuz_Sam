@@ -2,7 +2,7 @@
 import * as sagaEffects from 'redux-saga/effects';
 import { PayloadAction } from '@reduxjs/toolkit';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://nitcampuz-production.up.railway.app';
 import { loginRequest, loginSuccess, loginFailure, logout, updateUserRequest, updateUserSuccess, updateUserFailure, selectUser, deleteAccountRequest } from '../slices/authSlice';
 import { USERS } from '../../constants';
 import { User } from '../../types';

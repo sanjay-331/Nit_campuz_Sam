@@ -79,7 +79,7 @@ import { DashboardAnalytics, StudentDocument } from '../../types';
 import { selectUser } from '../slices/authSlice';
 import { showToast } from '../slices/uiSlice';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5000';
+const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://nitcampuz-production.up.railway.app';
 
 // --- HELPER FUNCTIONS ---
 function generateId(prefix: string): string {

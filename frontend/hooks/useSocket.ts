@@ -5,7 +5,7 @@ import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
 import { showToast } from '../store/slices/uiSlice';
 import { addNotification } from '../store/slices/appSlice';
 
-const SOCKET_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_BASE_URL || 'https://nitcampuz-production.up.railway.app';
 
 let socket: Socket | null = null;
 
