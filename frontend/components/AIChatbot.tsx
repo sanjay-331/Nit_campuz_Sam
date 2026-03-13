@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useSelector } from 'react-redux';
 import { selectUser } from '../store/slices/authSlice';
 import { ChatIcon, PaperAirplaneIcon, XIcon } from './icons/Icons';
@@ -13,7 +13,7 @@ if (!API_KEY) {
   console.warn("VITE_GEMINI_API_KEY is not set. AI Chatbot functionality will be limited to mock responses or error messages.");
 }
 
-const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 // Renders the AI's message, parsing basic markdown for lists and emphasis.
 const ChatMessageContent: React.FC<{ text: string }> = ({ text }) => {
@@ -100,19 +100,19 @@ const AIChatbot: React.FC = () => {
         try {
             let botResponseText = "";
             
-            if (!ai) {
+            if (!genAI) {
                  // Simulated "Mock Mode" response
                  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate realistic delay
                  botResponseText = "I'm currently in **Maintenance Mode**. While I can't process complex queries using live AI models right now, I can still provide general information about the NIT Campuz platform. \n\n* **Academic Info:** Check the 'Grades' and 'Attendance' tabs. \n* **Absences:** Use the 'Leave / OD' section. \n* **Admin tasks:** Use the Sidebar for user management.";
             } else {
-                const response = await ai.models.generateContent({
-                    model: "gemini-2.0-flash", // Updated to a more standard model name if 2.5 was a typo
-                    contents: input,
-                    config: {
-                        systemInstruction: getSystemInstruction(),
-                    },
+                const model = genAI.getGenerativeModel({ 
+                    model: "gemini-1.5-flash",
+                    systemInstruction: getSystemInstruction()
                 });
-                botResponseText = response.text;
+                
+                const result = await model.generateContent(input);
+                const response = await result.response;
+                botResponseText = response.text();
             }
             
             const botResponse = { text: botResponseText, sender: 'bot' as const };
