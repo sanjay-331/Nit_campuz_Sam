@@ -28,7 +28,7 @@ const NoDues: React.FC = () => {
 
     const handleDownload = () => {
         const token = localStorage.getItem('lms_token');
-        const url = `${import.meta.env.VITE_BASE_URL || 'https://nitcampuz-production.up.railway.app'}/api/academic/report/no-dues/${user.id}`;
+        const url = `https://nitcampuz-production.up.railway.app/api/academic/report/no-dues/${user.id}`; // Fixed production URL
         
         // Use fetch to download the file with authorization
         fetch(url, {
