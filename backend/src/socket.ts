@@ -7,12 +7,14 @@ export const initSocket = (server: HttpServer) => {
     io = new Server(server, {
         cors: {
             origin: [
+                'https://nit-campuz.vercel.app',
                 process.env.VITE_FRONTEND_URL || "http://localhost:5173",
                 "http://localhost:3000",
                 "http://localhost:4000",
                 "http://localhost:4001"
             ],
-            methods: ["GET", "POST", "PUT", "DELETE"]
+            methods: ["GET", "POST", "PUT", "DELETE"],
+            credentials: true
         }
     });
 
