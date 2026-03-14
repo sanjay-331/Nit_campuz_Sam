@@ -1,75 +1,198 @@
-
-
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent } from '../../ui/Card';
+import { useDispatch, useSelector } from 'react-redux';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../ui/Card';
 import { Input } from '../../ui/Input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/Select';
-import { SearchIcon } from '../../icons/Icons';
-import { BOOKS } from '../../../constants';
-import { motion } from 'framer-motion';
+import Button from '../../ui/Button';
+import { SearchIcon, PlusIcon, TrashIcon, ExternalLinkIcon } from '../../icons/Icons';
+import { selectAllBooks, addBookRequest, deleteBookRequest } from '../../../store/slices/appSlice';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Book } from '../../../types';
 
 const ELibrary: React.FC = () => {
+    const dispatch = useDispatch();
+    const books = useSelector(selectAllBooks);
     const [searchTerm, setSearchTerm] = useState('');
-    const [categoryFilter, setCategoryFilter] = useState('');
-
-    const categories = useMemo(() => [...new Set(BOOKS.map(b => b.category))], []);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     
+    const [newBook, setNewBook] = useState<Omit<Book, 'id'>>({
+        title: '',
+        author: '',
+        bookUrl: '',
+        imageUrl: ''
+    });
+
     const filteredBooks = useMemo(() => {
-        return BOOKS.filter(book => {
+        return books.filter(book => {
             const searchMatch = searchTerm === '' || 
                 book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                 book.author.toLowerCase().includes(searchTerm.toLowerCase());
-            const categoryMatch = categoryFilter === '' || book.category === categoryFilter;
-            return searchMatch && categoryMatch;
+            return searchMatch;
         });
-    }, [searchTerm, categoryFilter]);
+    }, [searchTerm, books]);
+
+    const handleAddBook = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newBook.title || !newBook.author || !newBook.bookUrl || !newBook.imageUrl) return;
+        dispatch(addBookRequest(newBook));
+        setNewBook({ title: '', author: '', bookUrl: '', imageUrl: '' });
+        setIsAddModalOpen(false);
+    };
+
+    const handleDeleteBook = (id: string) => {
+        if (window.confirm('Are you sure you want to delete this book?')) {
+            dispatch(deleteBookRequest(id));
+        }
+    };
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold">E-Library</h1>
-                <p className="text-gray-500">Access a wide range of digital books and resources.</p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">E-Library Management</h1>
+                    <p className="text-slate-500">Manage digital books and resources for students.</p>
+                </div>
+                <Button 
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
+                >
+                    <PlusIcon className="w-5 h-5 mr-2" />
+                    Add New Book
+                </Button>
             </div>
             
-            <Card className="overflow-visible">
+            <Card className="border-none shadow-sm bg-slate-50/50">
                 <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="md:col-span-2 relative">
-                            <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                            <Input 
-                                placeholder="Search by title or author..."
-                                className="pl-11"
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                            <SelectTrigger><SelectValue placeholder="Filter by category..." /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="">All Categories</SelectItem>
-                                {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                    <div className="relative">
+                        <SearchIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <Input 
+                            placeholder="Search library by title or author..."
+                            className="pl-11 bg-white border-slate-200 focus:ring-indigo-500 rounded-xl py-6"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                {filteredBooks.map(book => (
-                    <motion.div 
-                        key={book.id} 
-                        className="space-y-2 group cursor-pointer"
-                        whileHover={{ y: -5, transition: { type: 'spring', stiffness: 300 } }}
-                    >
-                        <div className="aspect-[3/4] bg-gray-100 rounded-lg overflow-hidden">
-                            <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <AnimatePresence>
+                {isAddModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="w-full max-w-lg"
+                        >
+                            <Card className="border-none shadow-2xl">
+                                <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle>Add New Book</CardTitle>
+                                        <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                            <PlusIcon className="w-6 h-6 rotate-45" />
+                                        </button>
+                                    </div>
+                                    <CardDescription>Fill in the details to add a book to the e-library.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <form onSubmit={handleAddBook} className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Book Title</label>
+                                            <Input 
+                                                required
+                                                placeholder="e.g. Clean Code"
+                                                value={newBook.title}
+                                                onChange={e => setNewBook({...newBook, title: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Author Name</label>
+                                            <Input 
+                                                required
+                                                placeholder="e.g. Robert C. Martin"
+                                                value={newBook.author}
+                                                onChange={e => setNewBook({...newBook, author: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Book URL (Link to PDF/Resource)</label>
+                                            <Input 
+                                                required
+                                                type="url"
+                                                placeholder="https://example.com/book.pdf"
+                                                value={newBook.bookUrl}
+                                                onChange={e => setNewBook({...newBook, bookUrl: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-slate-700">Image URL (Cover Image)</label>
+                                            <Input 
+                                                required
+                                                type="url"
+                                                placeholder="https://example.com/cover.jpg"
+                                                value={newBook.imageUrl}
+                                                onChange={e => setNewBook({...newBook, imageUrl: e.target.value})}
+                                            />
+                                        </div>
+                                        <div className="pt-4 flex gap-3">
+                                            <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsAddModalOpen(false)}>
+                                                Cancel
+                                            </Button>
+                                            <Button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white">
+                                                Add Book
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredBooks.length > 0 ? (
+                    filteredBooks.map(book => (
+                        <motion.div 
+                            key={book.id} 
+                            layout
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="group relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                        >
+                            <div className="aspect-[3/4] overflow-hidden relative">
+                                <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-4">
+                                    <a 
+                                        href={book.bookUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white/40 transition-colors"
+                                    >
+                                        <ExternalLinkIcon className="w-5 h-5" />
+                                    </a>
+                                    <button 
+                                        onClick={() => handleDeleteBook(book.id)}
+                                        className="p-2 bg-red-500/80 backdrop-blur-md rounded-lg text-white hover:bg-red-600 transition-colors shadow-lg"
+                                    >
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="p-4">
+                                <h3 className="font-bold text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors">{book.title}</h3>
+                                <p className="text-sm text-slate-500">{book.author}</p>
+                            </div>
+                        </motion.div>
+                    ))
+                ) : (
+                    <div className="col-span-full py-20 text-center">
+                        <div className="mb-4 inline-flex p-4 bg-slate-100 rounded-full text-slate-400">
+                            <SearchIcon className="w-12 h-12" />
                         </div>
-                        <div>
-                            <h3 className="font-semibold text-sm text-gray-800 truncate">{book.title}</h3>
-                            <p className="text-xs text-gray-500 truncate">{book.author}</p>
-                        </div>
-                    </motion.div>
-                ))}
+                        <h3 className="text-xl font-semibold text-slate-800">No books found</h3>
+                        <p className="text-slate-500">Try adjusting your search term or add a new book.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

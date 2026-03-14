@@ -4,13 +4,14 @@ import { UserRole, MarkStatus } from '@prisma/client';
 import { getIO } from '../socket';
 
 const calculateGradeAndPoints = (internal: number, exam: number): { grade: string, gradePoint: number } => {
-    const total = internal + (exam / 2); // Total out of 100
+    const total = Math.round(internal + (exam / 2)); // Total out of 100, rounded
     if (total >= 91) return { grade: 'O', gradePoint: 10.0 };
     if (total >= 81) return { grade: 'A+', gradePoint: 9.0 };
     if (total >= 71) return { grade: 'A', gradePoint: 8.0 };
     if (total >= 61) return { grade: 'B+', gradePoint: 7.0 };
     if (total >= 51) return { grade: 'B', gradePoint: 6.0 };
-    if (total >= 50) return { grade: 'C', gradePoint: 5.0 };
+    if (total >= 50) return { grade: 'C', gradePoint: 5.5 };
+    if (total >= 45) return { grade: 'D', gradePoint: 5.0 };
     return { grade: 'RA', gradePoint: 0.0 };
 };
 
@@ -190,7 +191,7 @@ const recalculateCgpa = async (studentId: string) => {
     let totalWeightedPoints = 0;
     let totalCredits = 0;
 
-    for (const mark of allPublishedMarks) {
+    for (const mark of allPublishedMarks as any[]) {
         if (mark.gradePoint !== null && mark.course) {
              totalWeightedPoints += mark.gradePoint * mark.course.credits;
              totalCredits += mark.course.credits;

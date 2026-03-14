@@ -273,3 +273,12 @@ model StudentDocument {
 
   user        User     @relation(fields: [studentId], references: [id])
 }
+
+model Book {
+  id        String   @id @default(uuid())
+  title     String
+  author    String
+  bookUrl   String
+  imageUrl  String
+  createdAt DateTime @default(now())
+}

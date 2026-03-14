@@ -1,7 +1,7 @@
 import * as sagaEffects from 'redux-saga/effects';
 import { PayloadAction } from '@reduxjs/toolkit';
 import * as D from '../../constants';
-import { User, Department, Course, UserRole, StudentStatus, Permission, Staff, Material, Mark, Attendance, ExamSchedule, Student, Alumnus, Assignment, Grade, StudentSubmission, ClassInDepartment, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate } from '../../types';
+import { User, Department, Course, UserRole, StudentStatus, Permission, Staff, Material, Mark, Attendance, ExamSchedule, Student, Alumnus, Assignment, Book, Grade, StudentSubmission, ClassInDepartment, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate } from '../../types';
 import {
     addUserRequest,
     updateUserInListRequest,
@@ -16,6 +16,7 @@ import {
     setDepartments,
     assignHODRequest,
     assignAdvisorRequest,
+    fetchClassesRequest,
     fetchCoursesRequest,
     setCourses,
     fetchMarksRequest,
@@ -47,6 +48,7 @@ import {
     setTutoringSessions,
     autoAssignMenteesRequest,
     updateMentorAssignmentRequest,
+    bulkUpdateMentorAssignmentsRequest,
     addRemarkRequest,
     fetchMentorAssignmentsRequest,
     setMentorAssignments,
@@ -76,12 +78,27 @@ import {
     verifyMarksRequest,
     publishMarksRequest,
     verifyDocumentRequest,
+    fetchBooksRequest,
+    setBooks,
+    addBookRequest,
+    deleteBookRequest,
 } from '../slices/appSlice';
 import { DashboardAnalytics, StudentDocument } from '../../types';
 import { selectUser } from '../slices/authSlice';
 import { showToast } from '../slices/uiSlice';
 
-const BASE_URL = 'https://nitcampuz-production.up.railway.app'; // Fixed production URL
+const getBaseUrl = () => {
+    if (import.meta.env.VITE_BASE_URL) return import.meta.env.VITE_BASE_URL;
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
+            return 'http://localhost:5000';
+        }
+    }
+    return 'https://nitcampuz-production.up.railway.app';
+};
+
+const BASE_URL = getBaseUrl();
 
 // --- HELPER FUNCTIONS ---
 function generateId(prefix: string): string {
@@ -245,6 +262,24 @@ function* handleFetchMentorAssignments() {
         }
     } catch (error) {
         console.error('Error fetching mentor assignments:', error);
+    }
+}
+
+function* handleFetchClasses() {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        if (!token) return;
+
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/classes`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data: ClassInDepartment[] = yield sagaEffects.call([response, 'json']);
+            yield sagaEffects.put(setClasses(data));
+        }
+    } catch (error) {
+        console.error('Error fetching classes:', error);
     }
 }
 
@@ -770,7 +805,7 @@ function* handleAssignAdvisor(action: PayloadAction<{ departmentId: string; year
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Class advisor assigned successfully.' }));
-            // Note: Classes don't have a fetch action yet, but we update them locally or wait for reload
+            yield sagaEffects.put(fetchClassesRequest());
         } else {
              const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
              throw new Error(errorData.message || 'Failed to assign class advisor.');
@@ -1170,6 +1205,7 @@ function* handleUpdateMentorAssignment(action: PayloadAction<{ studentId: string
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Mentor re-assigned successfully.' }));
+            yield sagaEffects.put(fetchMentorAssignmentsRequest());
         } else {
              const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
              throw new Error(errorData.message || 'Failed to re-assign mentor.');
@@ -1179,6 +1215,35 @@ function* handleUpdateMentorAssignment(action: PayloadAction<{ studentId: string
             yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
         } else {
             yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to re-assign mentor.' }));
+        }
+    }
+}
+
+function* handleBulkUpdateMentorAssignments(action: PayloadAction<{ studentIds: string[]; newMentorId: string }>) {
+    try {
+        const { studentIds, newMentorId } = action.payload;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/mentoring/assignments/bulk`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ studentIds, newMentorId }),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(fetchMentorAssignmentsRequest());
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Mentors assigned successfully for selected students.' }));
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to assign mentors in bulk.');
+        }
+    } catch (error) {
+         if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to assign mentors.' }));
         }
     }
 }
@@ -1453,6 +1518,78 @@ function* handleVerifyDocument(action: PayloadAction<{ documentId: string, statu
 }
 
 
+// --- LIBRARY SAGAS ---
+
+function* handleFetchBooks() {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/library`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const books: Book[] = yield sagaEffects.call([response, 'json']);
+            yield sagaEffects.put(setBooks(books));
+        }
+    } catch (error) {
+        console.error('Error fetching books:', error);
+    }
+}
+
+function* handleAddBook(action: PayloadAction<Omit<Book, 'id'>>) {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/library`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Book added to library successfully.' }));
+            yield sagaEffects.put(fetchBooksRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to add book.');
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to add book.' }));
+        }
+    }
+}
+
+function* handleDeleteBook(action: PayloadAction<string>) {
+    try {
+        const id = action.payload;
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/library/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Book removed from library.' }));
+            yield sagaEffects.put(fetchBooksRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to delete book.');
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to delete book.' }));
+        }
+    }
+}
+
+
 // --- WATCHER SAGA ---
 
 function* appSaga() {
@@ -1482,6 +1619,7 @@ function* appSaga() {
   yield sagaEffects.takeLatest(bookTutoringSessionRequest.type, handleBookTutoringSession);
   yield sagaEffects.takeLatest(autoAssignMenteesRequest.type, handleAutoAssignMentees);
   yield sagaEffects.takeLatest(updateMentorAssignmentRequest.type, handleUpdateMentorAssignment);
+  yield sagaEffects.takeLatest(bulkUpdateMentorAssignmentsRequest.type, handleBulkUpdateMentorAssignments);
   yield sagaEffects.takeLatest(addRemarkRequest.type, handleAddRemark);
   yield sagaEffects.takeLatest(applyForODRequest.type, handleApplyForOD);
   yield sagaEffects.takeLatest(processODRequest.type, handleProcessOD);
@@ -1489,6 +1627,11 @@ function* appSaga() {
   yield sagaEffects.takeLatest(fetchOnDutyApplicationsRequest.type, handleFetchOnDutyApplications);
   yield sagaEffects.takeLatest(fetchNoDuesCertificatesRequest.type, handleFetchNoDuesCertificates);
   yield sagaEffects.takeLatest(issueNoDuesCertificateRequest.type, handleIssueNoDuesCertificate);
+  
+  // Library Actions
+  yield sagaEffects.takeLatest(fetchBooksRequest.type, handleFetchBooks);
+  yield sagaEffects.takeLatest(addBookRequest.type, handleAddBook);
+  yield sagaEffects.takeLatest(deleteBookRequest.type, handleDeleteBook);
   
   // Document Actions
   yield sagaEffects.takeLatest(uploadDocumentRequest.type, handleUploadDocument);
@@ -1512,6 +1655,7 @@ function* appSaga() {
   yield sagaEffects.takeLatest(fetchPendingDocumentsRequest.type, handleFetchPendingDocuments);
   yield sagaEffects.takeLatest(fetchSubmissionsRequest.type, handleFetchSubmissions);
   yield sagaEffects.takeLatest(fetchAnalyticsRequest.type, handleFetchAnalytics);
+  yield sagaEffects.takeLatest(fetchClassesRequest.type, handleFetchClasses);
 }
 
 export default appSaga;

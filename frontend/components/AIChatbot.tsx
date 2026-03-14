@@ -93,7 +93,8 @@ const AIChatbot: React.FC = () => {
         if (input.trim() === '' || isLoading) return;
 
         const userMessage = { text: input, sender: 'user' as const };
-        setMessages(prev => [...prev, userMessage]);
+        const newMessages = [...messages, userMessage];
+        setMessages(newMessages);
         setInput('');
         setIsLoading(true);
 
@@ -101,25 +102,60 @@ const AIChatbot: React.FC = () => {
             let botResponseText = "";
             
             if (!genAI) {
-                 await new Promise(resolve => setTimeout(resolve, 1000));
-                 botResponseText = "AI services are currently offline. Please ensure the GEMINI API Key is correctly configured in the platform environment.";
+                 await new Promise(resolve => setTimeout(resolve, 1500));
+                 // More helpful mock response based on user role if API key is missing
+                 const role = user?.role || 'Guest';
+                 if (input.toLowerCase().includes('attendance')) {
+                     botResponseText = `As a ${role}, you can view attendance in the 'Attendance' tab. If you're staff, you can mark it there. If you're a student, you'll see your percentage and day-wise breakdown. (Note: API Key missing, showing simulated response)`;
+                 } else if (input.toLowerCase().includes('mark') || input.toLowerCase().includes('grade')) {
+                     botResponseText = `Grades go through a multi-step verification: Staff -> Exam Cell -> HOD -> Principal -> Publication. You can check the current status in the 'Grades' or 'Results' section. (Note: API Key missing, showing simulated response)`;
+                 } else {
+                     botResponseText = `I'm currently in offline mode (API key not configured), but I can tell you that as a ${role}, you have access to various tools in your sidebar to manage academic activities. How else can I help?`;
+                 }
             } else {
                 const model = genAI.getGenerativeModel({ 
-                    model: "gemini-1.5-flash",
+                    model: "gemini-2.5-flash",
                     systemInstruction: getSystemInstruction()
                 });
                 
-                const result = await model.generateContent(input);
-                const response = result.response;
-                botResponseText = response.text() || "I received an empty response from the AI service.";
+                // Build a clean alternating history: [user, model, user, model...]
+                const chatHistory: any[] = [];
+                for (let i = 0; i < messages.length; i++) {
+                    const m = messages[i];
+                    // Skip error messages
+                    if (m.text.includes('trouble connecting') || m.text.includes('encountered an error')) continue;
+                    
+                    const role = m.sender === 'user' ? 'user' : 'model';
+                    
+                    // Gemini history MUST start with 'user'
+                    if (chatHistory.length === 0 && role === 'model') continue;
+                    
+                    // Gemini history MUST alternate
+                    if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === role) continue;
+                    
+                    chatHistory.push({
+                        role,
+                        parts: [{ text: m.text }],
+                    });
+                }
+
+                // If history ends with 'user', the current 'sendMessage(input)' would be a 2nd consecutive 'user' turn
+                if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user') {
+                    chatHistory.pop();
+                }
+
+                const chat = model.startChat({ history: chatHistory });
+                const result = await chat.sendMessage(input);
+                botResponseText = result.response.text();
             }
             
             setMessages(prev => [...prev, { text: botResponseText, sender: 'bot' as const }]);
 
         } catch (error) {
-            console.error("AI Chatbot Error:", error);
+            console.error("AI Chatbot Error detail:", error);
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
             setMessages(prev => [...prev, { 
-                text: "I encountered an error while processing your request. This could be due to an invalid API key, network issues, or service quotas. Please try again in a moment.", 
+                text: `I'm having trouble connecting to my brain right now. Error: ${errorMessage}. Please check your internet or API configuration.`, 
                 sender: 'bot' as const 
             }]);
         } finally {

@@ -9,7 +9,7 @@ import { selectAllDepartments, selectAllUsers } from '../../../store/slices/appS
 import { UserRole, StudentStatus, Student } from '../../../types';
 import { RootState } from '../../../store';
 import Button from '../../ui/Button';
-import { DownloadIcon, FileTextIcon, BarChartIcon, TableIcon } from '../../icons/Icons';
+import { DownloadIcon, FileTextIcon, BarChartIcon, TableIcon, UserIcon, ClockIcon } from '../../icons/Icons';
 import { motion } from 'framer-motion';
 
 const COLORS = ['#6366f1', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6'];

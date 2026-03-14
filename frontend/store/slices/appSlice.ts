@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User, Department, Course, Mark, Attendance, Material, ExamSchedule, Student, Staff, Alumnus, Assignment, StudentSubmission, ClassInDepartment, Permission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate, DashboardAnalytics, StudentDocument, Notification } from '../../types';
+import { User, Department, Course, Mark, Attendance, Material, ExamSchedule, Student, Staff, Alumnus, Assignment, Book, StudentSubmission, ClassInDepartment, Permission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate, DashboardAnalytics, StudentDocument, Notification } from '../../types';
 import { RootState } from '../index';
 import * as D from '../../constants';
 
@@ -26,6 +26,7 @@ export interface AppState {
     analytics: DashboardAnalytics | null;
     studentDocuments: StudentDocument[];
     pendingDocuments: StudentDocument[];
+    books: Book[];
 }
 
 const initialState: AppState = {
@@ -51,6 +52,7 @@ const initialState: AppState = {
     analytics: null,
     studentDocuments: [],
     pendingDocuments: [],
+    books: D.BOOKS,
 };
 
 const appSlice = createSlice({
@@ -81,6 +83,7 @@ const appSlice = createSlice({
         },
         assignHODRequest: (state, action: PayloadAction<{ deptId: string; staffId: string } | { deptId: string; newUser: { name: string; email: string; contact?: string } }>) => {},
         assignAdvisorRequest: (state, action: PayloadAction<{ departmentId: string; year: number; advisorId: string }>) => {},
+        fetchClassesRequest: (state) => {},
         fetchCoursesRequest: (state) => {},
         setCourses: (state, action: PayloadAction<Course[]>) => {
             state.courses = action.payload;
@@ -147,6 +150,7 @@ const appSlice = createSlice({
         // Mentor/Advisor Actions
         autoAssignMenteesRequest: (state, action: PayloadAction<{ departmentId: string }>) => {},
         updateMentorAssignmentRequest: (state, action: PayloadAction<{ studentId: string; newMentorId: string }>) => {},
+        bulkUpdateMentorAssignmentsRequest: (state, action: PayloadAction<{ studentIds: string[]; newMentorId: string }>) => {},
         addRemarkRequest: (state, action: PayloadAction<Omit<Remark, 'id' | 'timestamp'>>) => {},
         fetchMentorAssignmentsRequest: (state) => {},
         setMentorAssignments: (state, action: PayloadAction<MentorAssignment[]>) => {
@@ -203,6 +207,14 @@ const appSlice = createSlice({
         addNotification: (state, action: PayloadAction<Notification>) => {
             state.notifications = [action.payload, ...state.notifications].slice(0, 20); // Keep last 20
         },
+
+        // Library Actions
+        fetchBooksRequest: (state) => {},
+        setBooks: (state, action: PayloadAction<Book[]>) => {
+            state.books = action.payload;
+        },
+        addBookRequest: (state, action: PayloadAction<Omit<Book, 'id'>>) => {},
+        deleteBookRequest: (state, action: PayloadAction<string>) => {},
     }
 });
 
@@ -223,6 +235,7 @@ export const {
     setDepartments,
     assignHODRequest,
     assignAdvisorRequest,
+    fetchClassesRequest,
     fetchCoursesRequest,
     setCourses,
     fetchMarksRequest,
@@ -258,6 +271,7 @@ export const {
     setTutoringSessions,
     autoAssignMenteesRequest,
     updateMentorAssignmentRequest,
+    bulkUpdateMentorAssignmentsRequest,
     addRemarkRequest,
     fetchMentorAssignmentsRequest,
     setMentorAssignments,
@@ -284,6 +298,10 @@ export const {
     setNotifications,
     markNotificationReadRequest,
     addNotification,
+    fetchBooksRequest,
+    setBooks,
+    addBookRequest,
+    deleteBookRequest,
 } = appSlice.actions;
 
 // Selectors
@@ -309,6 +327,7 @@ export const selectAnalytics = (state: RootState) => state.app.analytics;
 export const selectStudentDocuments = (state: RootState) => state.app.studentDocuments;
 export const selectPendingDocuments = (state: RootState) => state.app.pendingDocuments;
 export const selectNotifications = (state: RootState) => state.app.notifications;
+export const selectAllBooks = (state: RootState) => state.app.books;
 
 
 export default appSlice.reducer;

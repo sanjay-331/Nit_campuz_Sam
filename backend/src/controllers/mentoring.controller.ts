@@ -81,6 +81,30 @@ export const updateMentorAssignment = async (req: Request, res: Response): Promi
     }
 };
 
+export const bulkUpdateMentorAssignments = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { studentIds, newMentorId } = req.body;
+        if (!studentIds || !Array.isArray(studentIds) || !newMentorId) {
+            res.status(400).json({ message: 'Missing studentIds array or newMentorId' });
+            return;
+        }
+
+        const updates = studentIds.map(studentId => 
+            prisma.mentorAssignment.upsert({
+                where: { studentId },
+                update: { mentorId: newMentorId },
+                create: { studentId, mentorId: newMentorId }
+            })
+        );
+
+        await Promise.all(updates);
+        
+        res.json({ message: 'Mentors assigned successfully for selected students.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 export const getAllRemarks = async (req: Request, res: Response): Promise<void> => {
     try {
         const remarks = await prisma.remark.findMany();

@@ -8,7 +8,7 @@ import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGri
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../ui/Table';
 import { Student, Mark, Course } from '../../../types';
 import Button from '../../ui/Button';
-import { DownloadIcon } from '../../icons/Icons';
+import { DownloadIcon, ClockIcon } from '../../icons/Icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/Tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../ui/Dialog';
 import EmptyState from '../../shared/EmptyState';
@@ -83,11 +83,18 @@ const Grades: React.FC = () => {
     const DEPARTMENTS = useSelector(selectAllDepartments);
     const [viewingSemester, setViewingSemester] = useState<SemesterData | null>(null);
     
-    const myMarks = useMemo(() => {
+    const allMyMarks = useMemo(() => {
         if (!user) return [];
-        // Only show PUBLISHED marks to the student
-        return MARKS.filter(m => m.studentId === user.id && m.status === 'PUBLISHED');
+        return MARKS.filter(m => m.studentId === user.id);
     }, [user, MARKS]);
+
+    const myMarks = useMemo(() => {
+        return allMyMarks.filter(m => m.status === 'PUBLISHED');
+    }, [allMyMarks]);
+
+    const pendingMarks = useMemo(() => {
+        return allMyMarks.filter(m => m.status !== 'PUBLISHED');
+    }, [allMyMarks]);
 
 
     const semesters: SemesterData[] = useMemo(() => {
@@ -125,7 +132,7 @@ const Grades: React.FC = () => {
     const cgpa = studentUser.cgpa || 0;
     // Formula for percentage varies by University, using common Indian scale (CGPA * 9.5 or related)
     // However, keeping the existing logic but smoothing the display
-    const cgpaPercentage = cgpa >= 0.75 ? (cgpa - 0.75) * 10 : (cgpa * 10);
+    const cgpaPercentage = cgpa * 10;
     const department = DEPARTMENTS.find(d => d.id === studentUser.departmentId);
 
     const defaultSemester = semesters.length > 0 ? String(semesters[semesters.length - 1].semester) : '1';
@@ -134,12 +141,12 @@ const Grades: React.FC = () => {
         window.print();
     };
 
-    if (myMarks.length === 0) {
+    if (allMyMarks.length === 0) {
         return (
-             <div className="space-y-6">
+             <div className="space-y-6 text-slate-900">
                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Grades & Performance</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Grades & Performance</h1>
                         <p className="text-slate-500">Your official academic record and semester performance.</p>
                     </div>
                 </div>
@@ -182,6 +189,18 @@ const Grades: React.FC = () => {
                     </Button>
                 </div>
             </div>
+
+            {pendingMarks.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4 text-amber-800 shadow-sm">
+                    <div className="bg-amber-100 p-2.5 rounded-xl">
+                        <ClockIcon className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <div>
+                        <p className="font-bold text-sm">Verification in Progress</p>
+                        <p className="text-xs opacity-80">{pendingMarks.length} subject(s) are currently being verified by the Exam Cell, HOD, or Principal. They will be visible here once published.</p>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
                 <Card className="lg:col-span-1 bg-gradient-to-br from-indigo-600 to-violet-700 border-none shadow-lg shadow-indigo-100">

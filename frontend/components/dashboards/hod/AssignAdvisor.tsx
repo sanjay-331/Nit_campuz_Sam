@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/Select';
 import { AppDispatch } from '../../../store';
 import { selectUser } from '../../../store/slices/authSlice';
-import { selectAllUsers, selectAllClasses, assignAdvisorRequest } from '../../../store/slices/appSlice';
+import { selectAllUsers, selectAllClasses, assignAdvisorRequest, fetchClassesRequest } from '../../../store/slices/appSlice';
 import { Staff, UserRole } from '../../../types';
 
 const AssignAdvisor: React.FC = () => {
@@ -15,6 +15,10 @@ const AssignAdvisor: React.FC = () => {
     const user = useSelector(selectUser);
     const allUsers = useSelector(selectAllUsers);
     const classes = useSelector(selectAllClasses);
+
+    React.useEffect(() => {
+        dispatch(fetchClassesRequest());
+    }, [dispatch]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingYear, setEditingYear] = useState<number | null>(null);

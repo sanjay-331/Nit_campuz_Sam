@@ -49,7 +49,12 @@ const Attendance: React.FC = () => {
     const dayWiseAttendance = useMemo(() => {
         const groups: { [key: string]: typeof myAttendance } = {};
         myAttendance.forEach(a => {
-            const dateStr = new Date(a.date).toISOString().split('T')[0];
+            const dateStr = new Date(a.date).toLocaleDateString('en-IN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
             if (!groups[dateStr]) groups[dateStr] = [];
             groups[dateStr].push(a);
         });
@@ -60,7 +65,7 @@ const Attendance: React.FC = () => {
                 ...r,
                 course: COURSES.find(c => c.id === r.courseId)
             }))
-        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        })).sort((a, b) => new Date(b.records[0].date).getTime() - new Date(a.records[0].date).getTime());
     }, [myAttendance, COURSES]);
     
     const chartData = courseWiseAttendance.filter(c => c.total > 0).map(c => ({ name: c.code, Attendance: c.percentage }));
@@ -85,11 +90,11 @@ const Attendance: React.FC = () => {
                 </Card>
             </div>
 
-            <Tabs defaultValue="course-wise">
+            <Tabs defaultValue="day-wise">
                 <div className="flex items-center justify-between mb-4">
                     <TabsList className="bg-slate-100 p-1 rounded-xl">
-                        <TabsTrigger value="course-wise" className="rounded-lg px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Subject Wise</TabsTrigger>
                         <TabsTrigger value="day-wise" className="rounded-lg px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Day Wise</TabsTrigger>
+                        <TabsTrigger value="course-wise" className="rounded-lg px-4 py-2 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">Subject Wise</TabsTrigger>
                     </TabsList>
                 </div>
 
