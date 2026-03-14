@@ -100,6 +100,8 @@ const appSlice = createSlice({
         // Staff Actions
         submitAttendanceRequest: (state, action: PayloadAction<{ courseId: string; records: Record<string, boolean>}>) => {},
         saveMarksRequest: (state, action: PayloadAction<{ courseId: string; marks: Record<string, { internal?: number; exam?: number; }>}>) => {},
+        verifyMarksRequest: (state, action: PayloadAction<{ markIds: string[] }>) => {},
+        publishMarksRequest: (state, action: PayloadAction<{ courseId: string }>) => {},
         addMaterialRequest: (state, action: PayloadAction<Omit<Material, 'id' | 'uploadedAt'>>) => {},
         fetchMaterialsRequest: (state) => {},
         setMaterials: (state, action: PayloadAction<Material[]>) => {
@@ -230,6 +232,8 @@ export const {
     setClasses,
     submitAttendanceRequest,
     saveMarksRequest,
+    verifyMarksRequest,
+    publishMarksRequest,
     addMaterialRequest,
     fetchMaterialsRequest,
     setMaterials,

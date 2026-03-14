@@ -15,6 +15,16 @@ enum UserRole {
   EXAM_CELL
 }
 
+enum MarkStatus {
+  PENDING_EXAM_CELL
+  PENDING_HOD
+  PENDING_PRINCIPAL
+  PENDING_PUBLICATION
+  PUBLISHED
+}
+
+
+
 enum StudentStatus {
   ACTIVE
   ALUMNI
@@ -115,9 +125,15 @@ model Mark {
   exam       Float?
   grade      String?
   gradePoint Float?
+  status     MarkStatus @default(PENDING_EXAM_CELL)
+  
+  examCellVerified  Boolean @default(false)
+  hodVerified       Boolean @default(false)
+  principalVerified Boolean @default(false)
 
   course Course @relation(fields: [courseId], references: [id])
 }
+
 
 model Attendance {
   id        String   @id @default(uuid())

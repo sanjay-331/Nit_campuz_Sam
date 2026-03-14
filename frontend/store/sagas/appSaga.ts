@@ -73,6 +73,8 @@ import {
     setStudentDocuments,
     fetchPendingDocumentsRequest,
     setPendingDocuments,
+    verifyMarksRequest,
+    publishMarksRequest,
     verifyDocumentRequest,
 } from '../slices/appSlice';
 import { DashboardAnalytics, StudentDocument } from '../../types';
@@ -844,6 +846,59 @@ function* handleSaveMarks(action: PayloadAction<{ courseId: string; marks: Recor
     }
 }
 
+function* handleVerifyMarks(action: PayloadAction<{ markIds: string[] }>) {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/marks/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Marks verified successfully.' }));
+            yield sagaEffects.put(fetchMarksRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to verify marks.');
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        }
+    }
+}
+
+function* handlePublishMarks(action: PayloadAction<{ courseId: string }>) {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/marks/publish`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Results published successfully.' }));
+            yield sagaEffects.put(fetchMarksRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to publish results.');
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        }
+    }
+}
+
+
 function* handleAddMaterial(action: PayloadAction<Omit<Material, 'id' | 'uploadedAt'>>) {
     try {
         const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
@@ -1415,6 +1470,8 @@ function* appSaga() {
   yield sagaEffects.takeLatest(assignAdvisorRequest.type, handleAssignAdvisor);
   yield sagaEffects.takeLatest(submitAttendanceRequest.type, handleSubmitAttendance);
   yield sagaEffects.takeLatest(saveMarksRequest.type, handleSaveMarks);
+  yield sagaEffects.takeLatest(verifyMarksRequest.type, handleVerifyMarks);
+  yield sagaEffects.takeLatest(publishMarksRequest.type, handlePublishMarks);
   yield sagaEffects.takeLatest(addMaterialRequest.type, handleAddMaterial);
   yield sagaEffects.takeLatest(addAssignmentRequest.type, handleAddAssignment);
   yield sagaEffects.takeLatest(bulkAssignTopicsRequest.type, handleBulkAssignTopics);

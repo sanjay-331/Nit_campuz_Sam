@@ -85,8 +85,10 @@ const Grades: React.FC = () => {
     
     const myMarks = useMemo(() => {
         if (!user) return [];
-        return MARKS.filter(m => m.studentId === user.id);
-    }, [user]);
+        // Only show PUBLISHED marks to the student
+        return MARKS.filter(m => m.studentId === user.id && m.status === 'PUBLISHED');
+    }, [user, MARKS]);
+
 
     const semesters: SemesterData[] = useMemo(() => {
         if (myMarks.length === 0) return [];

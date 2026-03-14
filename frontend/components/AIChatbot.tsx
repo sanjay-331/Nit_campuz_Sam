@@ -20,49 +20,47 @@ const ChatMessageContent: React.FC<{ text: string }> = ({ text }) => {
     const formatText = (inputText: string) => {
         return inputText
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .split('\n').join('<br />');
     };
 
-    // Attempt to split the message into an intro and a list if it contains list-like formatting.
-    const parts = text.split(/\s\*\s/);
+    // Detect if the message contains list items (starting with * or - or number)
+    const lines = text.split('\n');
+    const intro: string[] = [];
+    const listItems: string[] = [];
+    let isListStarted = false;
 
-    if (parts.length > 1) {
-        const intro = formatText(parts[0]);
-        const listItems = parts.slice(1);
-        
-        let outro = '';
-        const lastItemIndex = listItems.length - 1;
-        const lastItem = listItems[lastItemIndex];
-        
-        // Heuristically detect if there's trailing text after the list.
-        const outroMatch = lastItem.match(/(.*?)\s+(Would you like to see.*)/s);
-        if (outroMatch) {
-            listItems[lastItemIndex] = outroMatch[1];
-            outro = formatText(outroMatch[2]);
+    lines.forEach(line => {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || /^\d+\.\s/.test(trimmed)) {
+            isListStarted = true;
+            listItems.push(trimmed.replace(/^(\*\s|-\s|\d+\.\s)/, ''));
+        } else if (!isListStarted) {
+            intro.push(line);
         }
+    });
 
+    if (listItems.length > 0) {
         return (
-            <div className="text-left">
-                <p dangerouslySetInnerHTML={{ __html: intro }} />
-                <ul className="list-disc list-outside pl-4 mt-2 space-y-1.5">
+            <div className="text-left space-y-2">
+                {intro.length > 0 && <p dangerouslySetInnerHTML={{ __html: formatText(intro.join('\n')) }} />}
+                <ul className="list-disc list-outside pl-4 space-y-1.5">
                     {listItems.map((item, index) => (
-                        <li key={index} dangerouslySetInnerHTML={{ __html: formatText(item.trim()) }} />
+                        <li key={index} dangerouslySetInnerHTML={{ __html: formatText(item) }} />
                     ))}
                 </ul>
-                {outro && <p className="mt-2" dangerouslySetInnerHTML={{ __html: outro }} />}
             </div>
         );
     }
 
-    // If no list is detected, render the formatted text as a simple paragraph.
-    return <p className="text-left" dangerouslySetInnerHTML={{ __html: formatText(text) }} />;
+    return <p className="text-left whitespace-pre-line" dangerouslySetInnerHTML={{ __html: formatText(text) }} />;
 };
 
 
 const AIChatbot: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<{ text: string, sender: 'user' | 'bot' }[]>([
-        { text: "Hello! I'm your AI Assistant. How can I help you today?", sender: 'bot' }
+        { text: "Hello! I'm your NIT Campuz AI Assistant. I can help you navigate the portal and understand academic workflows. How can I help you today?", sender: 'bot' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -77,14 +75,17 @@ const AIChatbot: React.FC = () => {
     
     const getSystemInstruction = () => {
         const role = user?.role;
+        const base = "You are an AI assistant for the NIT Campuz LMS platform. ";
+        const context = "Current User Role: " + role + ". ";
+        
         switch(role) {
-            case UserRole.ADMIN: return "You are an AI assistant for an Admin in a Learning Management System (LMS). You can help manage users, departments, and view activity logs. You cannot execute actions directly but can provide information and guidance on how to perform them. For example, if asked to promote students, explain the steps to do it in the admin dashboard.";
-            case UserRole.PRINCIPAL: return "You are an AI assistant for a Principal in an LMS. You can help analyze department performance, view attendance records, and generate reports. You cannot execute actions directly but can provide insights from data.";
-            case UserRole.HOD: return "You are an AI assistant for a Head of Department (HOD) in an LMS. You can help monitor student and staff performance within the department. You cannot execute actions directly but can provide specific data points.";
-            case UserRole.STAFF: return "You are an AI assistant for a Staff member/teacher in an LMS. You can help with managing attendance, marks, and course materials. You cannot execute actions directly but can answer questions about your students and courses.";
-            case UserRole.STUDENT: return "You are an AI assistant and a study buddy for a Student using the LMS. You can help check grades, attendance, and assignment deadlines. You cannot submit assignments but can provide information about them.";
-            case UserRole.EXAM_CELL: return "You are an AI assistant for the Exam Cell in an LMS. You can help with managing exam schedules, publishing results, and generating academic reports. You cannot execute actions directly but can provide data and summaries.";
-            default: return "You are a helpful AI assistant for an LMS.";
+            case UserRole.ADMIN: return base + context + "You help admins manage users, departments, and promote classes. Explain that user management is in the 'Users' tab, and Promoting classes is in the 'Promote' tab.";
+            case UserRole.PRINCIPAL: return base + context + "You help the Principal monitor college performance. Mention the 'Verify Results' section for final mark approvals after HOD verification, and 'Reports' for analytics.";
+            case UserRole.HOD: return base + context + "You help the HOD manage their department. Mention the 'Verify Results' section for approving marks from the Exam Cell, and 'Staff' management.";
+            case UserRole.STAFF: return base + context + "You help teachers manage students. Mark entry is in 'Marks', and Attendance is in the 'Attendance' tab. Mention that marks go through Exam Cell, HOD, and Principal before publication.";
+            case UserRole.STUDENT: return base + context + "You are a study buddy for the student. Help them find 'Grades', 'Attendance', and 'Documents'. If grades aren't showing, explain they might be pending publication by the Exam Cell.";
+            case UserRole.EXAM_CELL: return base + context + "You help the Exam Cell with schedules and results. Mention the 'Results' tab where they can verify Staff marks and Publish the final results after Principal approval.";
+            default: return base + "You are a helpful assistant for NIT Campuz.";
         }
     };
 
@@ -92,8 +93,7 @@ const AIChatbot: React.FC = () => {
         if (input.trim() === '' || isLoading) return;
 
         const userMessage = { text: input, sender: 'user' as const };
-        const newMessages = [...messages, userMessage];
-        setMessages(newMessages);
+        setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
 
@@ -101,9 +101,8 @@ const AIChatbot: React.FC = () => {
             let botResponseText = "";
             
             if (!genAI) {
-                 // Simulated "Mock Mode" response
-                 await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate realistic delay
-                 botResponseText = "I'm currently in **Maintenance Mode**. While I can't process complex queries using live AI models right now, I can still provide general information about the NIT Campuz platform. \n\n* **Academic Info:** Check the 'Grades' and 'Attendance' tabs. \n* **Absences:** Use the 'Leave / OD' section. \n* **Admin tasks:** Use the Sidebar for user management.";
+                 await new Promise(resolve => setTimeout(resolve, 1000));
+                 botResponseText = "AI services are currently offline. Please ensure the GEMINI API Key is correctly configured in the platform environment.";
             } else {
                 const model = genAI.getGenerativeModel({ 
                     model: "gemini-1.5-flash",
@@ -111,26 +110,23 @@ const AIChatbot: React.FC = () => {
                 });
                 
                 const result = await model.generateContent(input);
-                const response = await result.response;
-                botResponseText = response.text();
+                const response = result.response;
+                botResponseText = response.text() || "I received an empty response from the AI service.";
             }
             
-            const botResponse = { text: botResponseText, sender: 'bot' as const };
-            setMessages([...newMessages, botResponse]);
+            setMessages(prev => [...prev, { text: botResponseText, sender: 'bot' as const }]);
 
         } catch (error) {
             console.error("AI Chatbot Error:", error);
-            const errorMessage = { 
-                text: !API_KEY 
-                    ? "The AI Chatbot is currently in 'Mock Mode' because no API Key was found. I can't process your request right now, but I'm here!" 
-                    : "Sorry, I'm having trouble connecting right now. Please check your API key or try again later.", 
+            setMessages(prev => [...prev, { 
+                text: "I encountered an error while processing your request. This could be due to an invalid API key, network issues, or service quotas. Please try again in a moment.", 
                 sender: 'bot' as const 
-            };
-            setMessages([...newMessages, errorMessage]);
+            }]);
         } finally {
             setIsLoading(false);
         }
     };
+
 
     return (
         <>

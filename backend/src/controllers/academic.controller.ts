@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
-import { UserRole } from '@prisma/client';
+import { UserRole, MarkStatus } from '@prisma/client';
 import { getIO } from '../socket';
 
 const calculateGradeAndPoints = (internal: number, exam: number): { grade: string, gradePoint: number } => {
@@ -17,6 +17,7 @@ const calculateGradeAndPoints = (internal: number, exam: number): { grade: strin
 export const saveMarks = async (req: Request, res: Response): Promise<void> => {
   try {
     const { courseId, marks } = req.body;
+    const userRole = (req as any).user?.role;
     
     if (!courseId || !marks) {
       res.status(400).json({ message: 'courseId and marks object required' });
@@ -29,9 +30,13 @@ export const saveMarks = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Process each student's marks
-    // marks is an object like: { "student1_id": { internal: 40, exam: 80 } }
-    const updatedStudentIds = new Set<string>();
+    // Determine initial status based on role
+    // If staff uploads, it goes to PENDING_EXAM_CELL
+    // If Admin/Exam Cell uploads directly, they might want to Skip
+    let initialStatus: MarkStatus = MarkStatus.PENDING_EXAM_CELL;
+    if (userRole === UserRole.ADMIN || userRole === UserRole.EXAM_CELL) {
+        initialStatus = MarkStatus.PENDING_EXAM_CELL; 
+    }
 
     for (const [studentId, studentMarks] of Object.entries(marks)) {
       const typedMarks = studentMarks as { internal?: number, exam?: number };
@@ -51,7 +56,8 @@ export const saveMarks = async (req: Request, res: Response): Promise<void> => {
                     internal: typedMarks.internal,
                     exam: typedMarks.exam,
                     grade,
-                    gradePoint
+                    gradePoint,
+                    status: initialStatus
                 }
             });
         } else {
@@ -63,57 +69,140 @@ export const saveMarks = async (req: Request, res: Response): Promise<void> => {
                     internal: typedMarks.internal,
                     exam: typedMarks.exam,
                     grade,
-                    gradePoint
+                    gradePoint,
+                    status: initialStatus
                 }
             });
         }
-        updatedStudentIds.add(studentId);
       }
     }
 
-    // Recalculate CGPA for all updated students
-    for (const studentId of Array.from(updatedStudentIds)) {
-        const allMarks = await prisma.mark.findMany({
-            where: { studentId },
-            include: { course: true }
-        });
-
-        let totalWeightedPoints = 0;
-        let totalCredits = 0;
-
-        for (const mark of allMarks) {
-            if (mark.gradePoint !== null && mark.course) {
-                 totalWeightedPoints += mark.gradePoint * mark.course.credits;
-                 totalCredits += mark.course.credits;
-            }
-        }
-
-        const newCgpa = totalCredits > 0 ? (totalWeightedPoints / totalCredits) : 0;
-        
-        await prisma.studentProfile.updateMany({
-            where: { userId: studentId },
-            data: { cgpa: newCgpa }
-        });
-    }
-
-    // Emit real-time notification
-    try {
-        const io = getIO();
-        io.emit('notification', {
-            type: 'Marks',
-            message: `New marks have been posted for your course.`,
-            courseId: courseId
-        });
-    } catch (socketError) {
-        console.error('Socket emission failed:', socketError);
-    }
-
-    res.json({ message: 'Marks updated successfully' });
+    res.json({ message: 'Marks saved successfully and pending verification' });
 
   } catch (error) {
     console.error('Error saving marks:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+export const verifyMarks = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { markIds } = req.body;
+        const userRole = (req as any).user?.role;
+
+        if (!markIds || !Array.isArray(markIds)) {
+            res.status(400).json({ message: 'markIds array required' });
+            return;
+        }
+
+        let updateData: any = {};
+        let nextStatus: MarkStatus | undefined;
+
+        if (userRole === UserRole.EXAM_CELL) {
+            updateData.examCellVerified = true;
+            nextStatus = MarkStatus.PENDING_HOD;
+        } else if (userRole === UserRole.HOD) {
+            updateData.hodVerified = true;
+            nextStatus = MarkStatus.PENDING_PRINCIPAL;
+        } else if (userRole === UserRole.PRINCIPAL) {
+            updateData.principalVerified = true;
+            nextStatus = MarkStatus.PENDING_PUBLICATION;
+        } else {
+            res.status(403).json({ message: 'Unauthorized role for verification' });
+            return;
+        }
+
+        if (nextStatus) {
+            updateData.status = nextStatus;
+        }
+
+        await prisma.mark.updateMany({
+            where: { id: { in: markIds } },
+            data: updateData
+        });
+
+        res.json({ message: 'Marks verified and moved to next stage' });
+    } catch (error) {
+        console.error('Error verifying marks:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const publishMarks = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { courseId } = req.body;
+        const userRole = (req as any).user?.role;
+
+        if (userRole !== UserRole.EXAM_CELL && userRole !== UserRole.ADMIN) {
+            res.status(403).json({ message: 'Only Exam Cell or Admin can publish results' });
+            return;
+        }
+
+        // Find marks that are PENDING_PUBLICATION
+        const marksToPublish = await prisma.mark.findMany({
+            where: { 
+                courseId, 
+                status: MarkStatus.PENDING_PUBLICATION 
+            }
+        });
+
+        if (marksToPublish.length === 0) {
+            res.status(400).json({ message: 'No marks ready for publication for this course' });
+            return;
+        }
+
+        await prisma.mark.updateMany({
+            where: { id: { in: marksToPublish.map(m => m.id) } },
+            data: { status: MarkStatus.PUBLISHED }
+        });
+
+        // Recalculate CGPA for students
+        const studentIds = [...new Set(marksToPublish.map(m => m.studentId))];
+        for (const studentId of studentIds) {
+            await recalculateCgpa(studentId);
+        }
+
+        // Emit notification
+        try {
+            const io = getIO();
+            io.emit('notification', {
+                type: 'Results',
+                message: `Results have been published for course ID: ${courseId}`,
+                courseId: courseId
+            });
+        } catch (socketError) {
+            console.error('Socket emission failed:', socketError);
+        }
+
+        res.json({ message: 'Results published successfully' });
+    } catch (error) {
+        console.error('Error publishing marks:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+const recalculateCgpa = async (studentId: string) => {
+    const allPublishedMarks = await prisma.mark.findMany({
+        where: { studentId, status: MarkStatus.PUBLISHED },
+        include: { course: true }
+    });
+
+    let totalWeightedPoints = 0;
+    let totalCredits = 0;
+
+    for (const mark of allPublishedMarks) {
+        if (mark.gradePoint !== null && mark.course) {
+             totalWeightedPoints += mark.gradePoint * mark.course.credits;
+             totalCredits += mark.course.credits;
+        }
+    }
+
+    const newCgpa = totalCredits > 0 ? (totalWeightedPoints / totalCredits) : 0;
+    
+    await prisma.studentProfile.updateMany({
+        where: { userId: studentId },
+        data: { cgpa: newCgpa }
+    });
 };
 
 export const submitAttendance = async (req: Request, res: Response): Promise<void> => {

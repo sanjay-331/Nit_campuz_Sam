@@ -16,6 +16,16 @@ export enum StudentStatus {
     INACTIVE = 'Inactive',
 }
 
+export enum MarkStatus {
+    PENDING_EXAM_CELL = 'PENDING_EXAM_CELL',
+    PENDING_HOD = 'PENDING_HOD',
+    PENDING_PRINCIPAL = 'PENDING_PRINCIPAL',
+    PENDING_PUBLICATION = 'PENDING_PUBLICATION',
+    PUBLISHED = 'PUBLISHED',
+}
+
+
+
 export enum Permission {
   // User Permissions
   MANAGE_USERS = 'users:manage',
@@ -80,6 +90,7 @@ export interface Course {
 }
 
 export interface Mark {
+    id: string;
     courseId: string;
     studentId: string;
     semester: number;
@@ -87,7 +98,12 @@ export interface Mark {
     exam: number;
     grade: Grade;
     gradePoint: number;
+    status: MarkStatus;
+    examCellVerified: boolean;
+    hodVerified: boolean;
+    principalVerified: boolean;
 }
+
 
 export interface Attendance {
     courseId: string;

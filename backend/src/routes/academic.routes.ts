@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { saveMarks, submitAttendance, getAllCourses, getAllDepartments, getAllMarks, getAllAttendance, getAllMaterials, createMaterial, getAllExamSchedules, createExamSchedule, createDepartment, createCourse, assignHOD, assignAdvisor, getClasses } from '../controllers/academic.controller';
+import { saveMarks, verifyMarks, publishMarks, submitAttendance, getAllCourses, getAllDepartments, getAllMarks, getAllAttendance, getAllMaterials, createMaterial, getAllExamSchedules, createExamSchedule, createDepartment, createCourse, assignHOD, assignAdvisor, getClasses } from '../controllers/academic.controller';
+
 import { requireAuth, requireRole } from '../middlewares/auth.middleware';
 import { validate } from '../middleware/validate';
 import { saveMarksSchema, submitAttendanceSchema, createMaterialSchema, createExamScheduleSchema, createDepartmentSchema, createCourseSchema, assignHODSchema, assignAdvisorSchema } from '../validators/academic.validator';
@@ -22,7 +23,10 @@ router.get('/classes', getClasses);
 
 // Only Staff, HOD, and Admins can submit marks or attendance or upload materials
 router.post('/marks', requireRole([UserRole.STAFF, UserRole.HOD, UserRole.ADMIN]), validate(saveMarksSchema), saveMarks);
+router.post('/marks/verify', requireRole([UserRole.EXAM_CELL, UserRole.HOD, UserRole.PRINCIPAL, UserRole.ADMIN]), verifyMarks);
+router.post('/marks/publish', requireRole([UserRole.EXAM_CELL, UserRole.ADMIN]), publishMarks);
 router.post('/attendance', requireRole([UserRole.STAFF, UserRole.HOD, UserRole.ADMIN]), validate(submitAttendanceSchema), submitAttendance);
+
 router.post('/materials', requireRole([UserRole.STAFF, UserRole.HOD, UserRole.ADMIN]), validate(createMaterialSchema), createMaterial);
 router.post('/exam-schedules', requireRole([UserRole.EXAM_CELL, UserRole.ADMIN]), validate(createExamScheduleSchema), createExamSchedule);
 

@@ -15,8 +15,11 @@ const getAllOnDutyApplications = async (req, res) => {
 exports.getAllOnDutyApplications = getAllOnDutyApplications;
 const applyForOD = async (req, res) => {
     try {
+        const currentUser = req.user;
         const { applicantId, reason, fromDate, toDate, type } = req.body;
-        const applicant = await db_1.prisma.user.findUnique({ where: { id: applicantId } });
+        // Use the authenticated user's ID if available, otherwise fallback to body (for backward compat if needed)
+        const targetId = currentUser?.id || applicantId;
+        const applicant = await db_1.prisma.user.findUnique({ where: { id: targetId } });
         if (!applicant) {
             res.status(404).json({ message: 'Applicant not found' });
             return;

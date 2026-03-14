@@ -45,6 +45,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Departments', path: '/departments', icon: OfficeBuildingIcon, permission: Permission.VIEW_DEPARTMENTS },
     { name: 'Approvals', path: '/approvals', icon: CheckCircleIcon, permission: Permission.VIEW_USERS }, // Assume view_users
     { name: 'Verifications', path: '/verifications', icon: ShieldCheckIcon, permission: Permission.VIEW_USERS },
+    { name: 'Verify Results', path: '/marks-verification', icon: CheckCircleIcon, permission: Permission.VIEW_USERS },
     { name: 'Reports', path: '/reports', icon: DocumentReportIcon, permission: Permission.GENERATE_REPORTS },
   ],
   [UserRole.HOD]: [
@@ -58,6 +59,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Resources', path: '/resources', icon: BeakerIcon, permission: Permission.VIEW_USERS },
     { name: 'Approvals', path: '/approvals', icon: CheckCircleIcon, permission: Permission.VIEW_USERS },
     { name: 'Verifications', path: '/verifications', icon: ShieldCheckIcon, permission: Permission.VIEW_USERS },
+    { name: 'Verify Results', path: '/marks-verification', icon: CheckCircleIcon, permission: Permission.VIEW_USERS },
   ],
   [UserRole.STAFF]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon },

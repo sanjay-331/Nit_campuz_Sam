@@ -5,7 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireRole = exports.requireAuth = void 0;
 const jwt_simple_1 = __importDefault(require("jwt-simple"));
-const requireAuth = (req, res, next) => {
+const db_1 = require("../db");
+const requireAuth = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
         res.status(401).json({ message: 'Missing Authorization header' });
@@ -19,9 +20,18 @@ const requireAuth = (req, res, next) => {
     try {
         const secret = process.env.JWT_SECRET || 'fallback_secret';
         const decoded = jwt_simple_1.default.decode(token, secret);
+        // Verify user exists in database
+        const user = await db_1.prisma.user.findUnique({
+            where: { id: decoded.sub },
+            select: { id: true, role: true }
+        });
+        if (!user) {
+            res.status(401).json({ message: 'Invalid session. User not found.' });
+            return;
+        }
         req.user = {
-            id: decoded.sub,
-            role: decoded.role,
+            id: user.id,
+            role: user.role,
         };
         next();
     }

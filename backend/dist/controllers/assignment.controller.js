@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.gradeSubmission = exports.submitAssignment = exports.getAllSubmissions = exports.createAssignment = exports.getAllAssignments = void 0;
+exports.bulkAssignTopics = exports.gradeSubmission = exports.submitAssignment = exports.getAllSubmissions = exports.createAssignment = exports.getAllAssignments = void 0;
 const db_1 = require("../db");
+const socket_1 = require("../socket");
 const getAllAssignments = async (req, res) => {
     try {
         const assignments = await db_1.prisma.assignment.findMany();
@@ -27,6 +28,18 @@ const createAssignment = async (req, res) => {
                 dueDate: new Date(dueDate),
             }
         });
+        // Emit real-time notification
+        try {
+            const io = (0, socket_1.getIO)();
+            io.emit('notification', {
+                type: 'Assignment',
+                message: `New assignment posted: ${title}`,
+                courseId: courseId
+            });
+        }
+        catch (socketError) {
+            console.error('Socket emission failed:', socketError);
+        }
         res.status(201).json(assignment);
     }
     catch (error) {
@@ -124,3 +137,44 @@ const gradeSubmission = async (req, res) => {
     }
 };
 exports.gradeSubmission = gradeSubmission;
+const bulkAssignTopics = async (req, res) => {
+    try {
+        const { courseId, assignments } = req.body;
+        const results = [];
+        for (const item of assignments) {
+            const { studentId, topic, remarks } = item;
+            // Find existing submission for any assignment in this course
+            const assignment = await db_1.prisma.assignment.findFirst({ where: { courseId } });
+            if (!assignment)
+                continue;
+            const existing = await db_1.prisma.submission.findFirst({
+                where: { assignmentId: assignment.id, studentId }
+            });
+            if (existing) {
+                const updated = await db_1.prisma.submission.update({
+                    where: { id: existing.id },
+                    data: { topic, remarks }
+                });
+                results.push(updated);
+            }
+            else {
+                const created = await db_1.prisma.submission.create({
+                    data: {
+                        assignmentId: assignment.id,
+                        studentId,
+                        topic,
+                        remarks,
+                        status: 'Not Submitted'
+                    }
+                });
+                results.push(created);
+            }
+        }
+        res.json({ message: `Successfully assigned topics to ${results.length} students`, data: results });
+    }
+    catch (error) {
+        console.error('Error bulk assigning topics:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.bulkAssignTopics = bulkAssignTopics;

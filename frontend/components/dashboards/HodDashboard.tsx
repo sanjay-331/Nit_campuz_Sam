@@ -39,6 +39,8 @@ const AnimatedPage: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     </motion.div>
 );
 
+import MarksVerification from '../shared/MarksVerification';
+
 const HodDashboard: React.FC = () => {
     return (
         <Routes>
@@ -52,8 +54,10 @@ const HodDashboard: React.FC = () => {
             <Route path="/resources" element={<AnimatedPage><Resources /></AnimatedPage>} />
             <Route path="/approvals" element={<AnimatedPage><ODApprovals /></AnimatedPage>} />
             <Route path="/verifications" element={<AnimatedPage><DocumentVerification /></AnimatedPage>} />
+            <Route path="/marks-verification" element={<AnimatedPage><MarksVerification /></AnimatedPage>} />
         </Routes>
     );
 };
+
 
 export default HodDashboard;

@@ -1,7 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createExamSchedule = exports.getAllExamSchedules = exports.createMaterial = exports.getAllMaterials = exports.getAllAttendance = exports.getAllMarks = exports.getAllDepartments = exports.getAllCourses = exports.submitAttendance = exports.saveMarks = void 0;
+exports.getClasses = exports.assignAdvisor = exports.assignHOD = exports.createCourse = exports.createDepartment = exports.createExamSchedule = exports.getAllExamSchedules = exports.createMaterial = exports.getAllMaterials = exports.getAllAttendance = exports.getAllMarks = exports.getAllDepartments = exports.getAllCourses = exports.submitAttendance = exports.publishMarks = exports.verifyMarks = exports.saveMarks = void 0;
 const db_1 = require("../db");
+const client_1 = require("@prisma/client");
+const socket_1 = require("../socket");
 const calculateGradeAndPoints = (internal, exam) => {
     const total = internal + (exam / 2); // Total out of 100
     if (total >= 91)
@@ -21,6 +23,7 @@ const calculateGradeAndPoints = (internal, exam) => {
 const saveMarks = async (req, res) => {
     try {
         const { courseId, marks } = req.body;
+        const userRole = req.user?.role;
         if (!courseId || !marks) {
             res.status(400).json({ message: 'courseId and marks object required' });
             return;
@@ -30,9 +33,13 @@ const saveMarks = async (req, res) => {
             res.status(404).json({ message: 'Course not found' });
             return;
         }
-        // Process each student's marks
-        // marks is an object like: { "student1_id": { internal: 40, exam: 80 } }
-        const updatedStudentIds = new Set();
+        // Determine initial status based on role
+        // If staff uploads, it goes to PENDING_EXAM_CELL
+        // If Admin/Exam Cell uploads directly, they might want to Skip
+        let initialStatus = client_1.MarkStatus.PENDING_EXAM_CELL;
+        if (userRole === client_1.UserRole.ADMIN || userRole === client_1.UserRole.EXAM_CELL) {
+            initialStatus = client_1.MarkStatus.PENDING_EXAM_CELL;
+        }
         for (const [studentId, studentMarks] of Object.entries(marks)) {
             const typedMarks = studentMarks;
             if (typedMarks.internal !== undefined && typedMarks.exam !== undefined) {
@@ -48,7 +55,8 @@ const saveMarks = async (req, res) => {
                             internal: typedMarks.internal,
                             exam: typedMarks.exam,
                             grade,
-                            gradePoint
+                            gradePoint,
+                            status: initialStatus
                         }
                     });
                 }
@@ -61,34 +69,14 @@ const saveMarks = async (req, res) => {
                             internal: typedMarks.internal,
                             exam: typedMarks.exam,
                             grade,
-                            gradePoint
+                            gradePoint,
+                            status: initialStatus
                         }
                     });
                 }
-                updatedStudentIds.add(studentId);
             }
         }
-        // Recalculate CGPA for all updated students
-        for (const studentId of Array.from(updatedStudentIds)) {
-            const allMarks = await db_1.prisma.mark.findMany({
-                where: { studentId },
-                include: { course: true }
-            });
-            let totalWeightedPoints = 0;
-            let totalCredits = 0;
-            for (const mark of allMarks) {
-                if (mark.gradePoint !== null && mark.course) {
-                    totalWeightedPoints += mark.gradePoint * mark.course.credits;
-                    totalCredits += mark.course.credits;
-                }
-            }
-            const newCgpa = totalCredits > 0 ? (totalWeightedPoints / totalCredits) : 0;
-            await db_1.prisma.studentProfile.updateMany({
-                where: { userId: studentId },
-                data: { cgpa: newCgpa }
-            });
-        }
-        res.json({ message: 'Marks updated successfully' });
+        res.json({ message: 'Marks saved successfully and pending verification' });
     }
     catch (error) {
         console.error('Error saving marks:', error);
@@ -96,6 +84,114 @@ const saveMarks = async (req, res) => {
     }
 };
 exports.saveMarks = saveMarks;
+const verifyMarks = async (req, res) => {
+    try {
+        const { markIds } = req.body;
+        const userRole = req.user?.role;
+        if (!markIds || !Array.isArray(markIds)) {
+            res.status(400).json({ message: 'markIds array required' });
+            return;
+        }
+        let updateData = {};
+        let nextStatus;
+        if (userRole === client_1.UserRole.EXAM_CELL) {
+            updateData.examCellVerified = true;
+            nextStatus = client_1.MarkStatus.PENDING_HOD;
+        }
+        else if (userRole === client_1.UserRole.HOD) {
+            updateData.hodVerified = true;
+            nextStatus = client_1.MarkStatus.PENDING_PRINCIPAL;
+        }
+        else if (userRole === client_1.UserRole.PRINCIPAL) {
+            updateData.principalVerified = true;
+            nextStatus = client_1.MarkStatus.PENDING_PUBLICATION;
+        }
+        else {
+            res.status(403).json({ message: 'Unauthorized role for verification' });
+            return;
+        }
+        if (nextStatus) {
+            updateData.status = nextStatus;
+        }
+        await db_1.prisma.mark.updateMany({
+            where: { id: { in: markIds } },
+            data: updateData
+        });
+        res.json({ message: 'Marks verified and moved to next stage' });
+    }
+    catch (error) {
+        console.error('Error verifying marks:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.verifyMarks = verifyMarks;
+const publishMarks = async (req, res) => {
+    try {
+        const { courseId } = req.body;
+        const userRole = req.user?.role;
+        if (userRole !== client_1.UserRole.EXAM_CELL && userRole !== client_1.UserRole.ADMIN) {
+            res.status(403).json({ message: 'Only Exam Cell or Admin can publish results' });
+            return;
+        }
+        // Find marks that are PENDING_PUBLICATION
+        const marksToPublish = await db_1.prisma.mark.findMany({
+            where: {
+                courseId,
+                status: client_1.MarkStatus.PENDING_PUBLICATION
+            }
+        });
+        if (marksToPublish.length === 0) {
+            res.status(400).json({ message: 'No marks ready for publication for this course' });
+            return;
+        }
+        await db_1.prisma.mark.updateMany({
+            where: { id: { in: marksToPublish.map(m => m.id) } },
+            data: { status: client_1.MarkStatus.PUBLISHED }
+        });
+        // Recalculate CGPA for students
+        const studentIds = [...new Set(marksToPublish.map(m => m.studentId))];
+        for (const studentId of studentIds) {
+            await recalculateCgpa(studentId);
+        }
+        // Emit notification
+        try {
+            const io = (0, socket_1.getIO)();
+            io.emit('notification', {
+                type: 'Results',
+                message: `Results have been published for course ID: ${courseId}`,
+                courseId: courseId
+            });
+        }
+        catch (socketError) {
+            console.error('Socket emission failed:', socketError);
+        }
+        res.json({ message: 'Results published successfully' });
+    }
+    catch (error) {
+        console.error('Error publishing marks:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.publishMarks = publishMarks;
+const recalculateCgpa = async (studentId) => {
+    const allPublishedMarks = await db_1.prisma.mark.findMany({
+        where: { studentId, status: client_1.MarkStatus.PUBLISHED },
+        include: { course: true }
+    });
+    let totalWeightedPoints = 0;
+    let totalCredits = 0;
+    for (const mark of allPublishedMarks) {
+        if (mark.gradePoint !== null && mark.course) {
+            totalWeightedPoints += mark.gradePoint * mark.course.credits;
+            totalCredits += mark.course.credits;
+        }
+    }
+    const newCgpa = totalCredits > 0 ? (totalWeightedPoints / totalCredits) : 0;
+    await db_1.prisma.studentProfile.updateMany({
+        where: { userId: studentId },
+        data: { cgpa: newCgpa }
+    });
+};
 const submitAttendance = async (req, res) => {
     try {
         const { courseId, records } = req.body;
@@ -190,6 +286,18 @@ const createMaterial = async (req, res) => {
         const newMaterial = await db_1.prisma.material.create({
             data: { courseId, title, type, url }
         });
+        // Emit real-time notification
+        try {
+            const io = (0, socket_1.getIO)();
+            io.emit('notification', {
+                type: 'Material',
+                message: `New study material posted: ${title}`,
+                courseId: courseId
+            });
+        }
+        catch (socketError) {
+            console.error('Socket emission failed:', socketError);
+        }
         res.json(newMaterial);
     }
     catch (error) {
@@ -224,3 +332,90 @@ const createExamSchedule = async (req, res) => {
     }
 };
 exports.createExamSchedule = createExamSchedule;
+const createDepartment = async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name) {
+            res.status(400).json({ message: 'Department name is required' });
+            return;
+        }
+        const department = await db_1.prisma.department.create({ data: { name } });
+        res.status(201).json(department);
+    }
+    catch (error) {
+        console.error('Error creating department:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.createDepartment = createDepartment;
+const createCourse = async (req, res) => {
+    try {
+        const { name, code, staffId, departmentId, credits, semester } = req.body;
+        const course = await db_1.prisma.course.create({
+            data: { name, code, staffId, departmentId, credits: Number(credits), semester: Number(semester) }
+        });
+        res.status(201).json(course);
+    }
+    catch (error) {
+        console.error('Error creating course:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.createCourse = createCourse;
+const assignHOD = async (req, res) => {
+    try {
+        const { deptId, staffId } = req.body;
+        // Demote old HOD
+        await db_1.prisma.user.updateMany({
+            where: { departmentId: deptId, role: client_1.UserRole.HOD },
+            data: { role: client_1.UserRole.STAFF }
+        });
+        // Promote new HOD
+        const updatedUser = await db_1.prisma.user.update({
+            where: { id: staffId },
+            data: { role: client_1.UserRole.HOD }
+        });
+        res.json(updatedUser);
+    }
+    catch (error) {
+        console.error('Error assigning HOD:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.assignHOD = assignHOD;
+const assignAdvisor = async (req, res) => {
+    try {
+        const { departmentId, year, advisorId } = req.body;
+        const existingClass = await db_1.prisma.class.findFirst({
+            where: { departmentId, year: Number(year) }
+        });
+        let updatedClass;
+        if (existingClass) {
+            updatedClass = await db_1.prisma.class.update({
+                where: { id: existingClass.id },
+                data: { advisorId }
+            });
+        }
+        else {
+            updatedClass = await db_1.prisma.class.create({
+                data: { departmentId, year: Number(year), advisorId }
+            });
+        }
+        res.json(updatedClass);
+    }
+    catch (error) {
+        console.error('Error assigning advisor:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.assignAdvisor = assignAdvisor;
+const getClasses = async (req, res) => {
+    try {
+        const classes = await db_1.prisma.class.findMany();
+        res.json(classes);
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getClasses = getClasses;
