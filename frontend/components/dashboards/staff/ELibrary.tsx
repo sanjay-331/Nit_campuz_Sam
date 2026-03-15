@@ -187,22 +187,26 @@ const ELibrary: React.FC = () => {
                             className="group relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                         >
                             <div className="aspect-[3/4] overflow-hidden relative">
-                                <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-4">
-                                    <a 
-                                        href={book.bookUrl} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white/40 transition-colors"
-                                    >
-                                        <ExternalLinkIcon className="w-5 h-5" />
-                                    </a>
-                                    <button 
-                                        onClick={() => setBookToDelete(book)}
-                                        className="p-2 bg-red-500/80 backdrop-blur-md rounded-lg text-white hover:bg-red-600 transition-colors shadow-lg"
-                                    >
-                                        <TrashIcon className="w-5 h-5" />
-                                    </button>
+                                <a href={book.imageUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                    <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                </a>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end justify-between p-4">
+                                    <div className="flex gap-2 pointer-events-auto">
+                                        <a 
+                                            href={book.bookUrl} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white/40 transition-colors"
+                                        >
+                                            <ExternalLinkIcon className="w-5 h-5" />
+                                        </a>
+                                        <button 
+                                            onClick={() => setBookToDelete(book)}
+                                            className="p-2 bg-red-500/80 backdrop-blur-md rounded-lg text-white hover:bg-red-600 transition-colors shadow-lg"
+                                        >
+                                            <TrashIcon className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="p-4">

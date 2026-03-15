@@ -55,13 +55,15 @@ const StudentLibrary: React.FC = () => {
                             whileHover={{ y: -5 }}
                         >
                             <div className="aspect-[3/4] overflow-hidden relative">
-                                <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <a href={book.imageUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                    <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                </a>
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
                                     <a 
                                         href={book.bookUrl} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="p-3 bg-white rounded-full text-indigo-600 shadow-xl hover:scale-110 transition-transform"
+                                        className="p-3 bg-white rounded-full text-indigo-600 shadow-xl hover:scale-110 transition-transform pointer-events-auto"
                                     >
                                         <ExternalLinkIcon className="w-6 h-6" />
                                     </a>

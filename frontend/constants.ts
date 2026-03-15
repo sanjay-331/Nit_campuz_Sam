@@ -1,6 +1,6 @@
 
 
-import { UserRole, User, Department, Course, Student, Staff, Mark, Attendance, ActivityLog, StudentStatus, Alumnus, ClassInDepartment, Reminder, TodaysClass, UpcomingEvent, Permission, Notification, Assignment, Material, Book, ExamSchedule, Grade, StudentSubmission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate } from './types';
+import { UserRole, User, Department, Course, Student, Staff, Mark, Attendance, ActivityLog, StudentStatus, Alumnus, ClassInDepartment, Reminder, TodaysClass, UpcomingEvent, Permission, Notification, Assignment, Material, Book, ExamSchedule, Grade, StudentSubmission, Tutor, TutorApplication, TutoringSession, MentorAssignment, Remark, OnDutyApplication, NoDuesCertificate, MarkStatus } from './types';
 
 export const GRADE_POINTS: Record<Grade, number> = {
     'O': 10,
@@ -100,40 +100,40 @@ export let COURSES: Course[] = [
 
 export let MARKS: Mark[] = [
     // Marks for Alice Johnson (u8) - Corrected & Enriched
-    { courseId: 'c5', studentId: 'u8', semester: 1, internal: 42, exam: 78, grade: 'A+', gradePoint: 9.0 },
-    { courseId: 'c6', studentId: 'u8', semester: 1, internal: 40, exam: 70, grade: 'A', gradePoint: 8.0 },
-    { courseId: 'c7', studentId: 'u8', semester: 2, internal: 46, exam: 85, grade: 'A+', gradePoint: 9.0 },
-    { courseId: 'c1', studentId: 'u8', semester: 3, internal: 45, exam: 80, grade: 'A+', gradePoint: 9.0 },
+    { id: 'm1', courseId: 'c5', studentId: 'u8', semester: 1, internal: 42, exam: 78, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm2', courseId: 'c6', studentId: 'u8', semester: 1, internal: 40, exam: 70, grade: 'A', gradePoint: 8.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm3', courseId: 'c7', studentId: 'u8', semester: 2, internal: 46, exam: 85, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm4', courseId: 'c1', studentId: 'u8', semester: 3, internal: 45, exam: 80, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
 
     // Marks for Bob Smith (u9) - Enriched
-    { courseId: 'c5', studentId: 'u9', semester: 1, internal: 40, exam: 80, grade: 'A', gradePoint: 8.0 },
-    { courseId: 'c6', studentId: 'u9', semester: 1, internal: 45, exam: 88, grade: 'A+', gradePoint: 9.0 },
-    { courseId: 'c7', studentId: 'u9', semester: 2, internal: 38, exam: 70, grade: 'A', gradePoint: 8.0 },
-    { courseId: 'c1', studentId: 'u9', semester: 3, internal: 40, exam: 75, grade: 'A', gradePoint: 8.0 }, // existing
-    { courseId: 'c8', studentId: 'u9', semester: 4, internal: 41, exam: 78, grade: 'A', gradePoint: 8.0 },
-    { courseId: 'c2', studentId: 'u9', semester: 5, internal: 48, exam: 90, grade: 'O', gradePoint: 10.0 }, // existing
+    { id: 'm5', courseId: 'c5', studentId: 'u9', semester: 1, internal: 40, exam: 80, grade: 'A', gradePoint: 8.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm6', courseId: 'c6', studentId: 'u9', semester: 1, internal: 45, exam: 88, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm7', courseId: 'c7', studentId: 'u9', semester: 2, internal: 38, exam: 70, grade: 'A', gradePoint: 8.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm8', courseId: 'c1', studentId: 'u9', semester: 3, internal: 40, exam: 75, grade: 'A', gradePoint: 8.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm9', courseId: 'c8', studentId: 'u9', semester: 4, internal: 41, exam: 78, grade: 'A', gradePoint: 8.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm10', courseId: 'c2', studentId: 'u9', semester: 5, internal: 48, exam: 90, grade: 'O', gradePoint: 10.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
 
     // Marks for Charlie Brown (u10) - Unchanged
-    { courseId: 'c3', studentId: 'u10', semester: 7, internal: 35, exam: 60, grade: 'B+', gradePoint: 7.0 },
+    { id: 'm11', courseId: 'c3', studentId: 'u10', semester: 7, internal: 35, exam: 60, grade: 'B+', gradePoint: 7.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
 
     // Marks for Diana Prince (u11) - Corrected & Enriched
-    { courseId: 'c9', studentId: 'u11', semester: 1, internal: 45, exam: 90, grade: 'A+', gradePoint: 9.0 },
-    { courseId: 'c5', studentId: 'u11', semester: 1, internal: 48, exam: 92, grade: 'O', gradePoint: 10.0 },
-    { courseId: 'c10', studentId: 'u11', semester: 2, internal: 42, exam: 84, grade: 'A+', gradePoint: 9.0 },
-    { courseId: 'c3', studentId: 'u11', semester: 3, internal: 42, exam: 85, grade: 'A+', gradePoint: 9.0 }, // Corrected from c4
+    { id: 'm12', courseId: 'c9', studentId: 'u11', semester: 1, internal: 45, exam: 90, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm13', courseId: 'c5', studentId: 'u11', semester: 1, internal: 48, exam: 92, grade: 'O', gradePoint: 10.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm14', courseId: 'c10', studentId: 'u11', semester: 2, internal: 42, exam: 84, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm15', courseId: 'c3', studentId: 'u11', semester: 3, internal: 42, exam: 85, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
 
     // Marks for Carol White (u15) - New
-    { courseId: 'c5', studentId: 'u15', semester: 1, internal: 35, exam: 60, grade: 'B+', gradePoint: 7.0 },
-    { courseId: 'c6', studentId: 'u15', semester: 1, internal: 38, exam: 68, grade: 'A', gradePoint: 8.0 },
-    { courseId: 'c7', studentId: 'u15', semester: 2, internal: 40, exam: 72, grade: 'A', gradePoint: 8.0 },
-    { courseId: 'c1', studentId: 'u15', semester: 3, internal: 39, exam: 75, grade: 'A', gradePoint: 8.0 },
-    { courseId: 'c8', studentId: 'u15', semester: 4, internal: 42, exam: 80, grade: 'A+', gradePoint: 9.0 },
-    { courseId: 'c2', studentId: 'u15', semester: 5, internal: 44, exam: 85, grade: 'A+', gradePoint: 9.0 },
+    { id: 'm16', courseId: 'c5', studentId: 'u15', semester: 1, internal: 35, exam: 60, grade: 'B+', gradePoint: 7.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm17', courseId: 'c6', studentId: 'u15', semester: 1, internal: 38, exam: 68, grade: 'A', gradePoint: 8.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm18', courseId: 'c7', studentId: 'u15', semester: 2, internal: 40, exam: 72, grade: 'A', gradePoint: 8.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm19', courseId: 'c1', studentId: 'u15', semester: 3, internal: 39, exam: 75, grade: 'A', gradePoint: 8.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm20', courseId: 'c8', studentId: 'u15', semester: 4, internal: 42, exam: 80, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm21', courseId: 'c2', studentId: 'u15', semester: 5, internal: 44, exam: 85, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
 
     // Marks for Mira (u19) - New
-    { courseId: 'c6', studentId: 'u19', semester: 1, internal: 47, exam: 94, grade: 'O', gradePoint: 10.0 },
-    { courseId: 'c7', studentId: 'u19', semester: 2, internal: 46, exam: 90, grade: 'O', gradePoint: 10.0 },
-    { courseId: 'c1', studentId: 'u19', semester: 3, internal: 45, exam: 88, grade: 'A+', gradePoint: 9.0 },
+    { id: 'm22', courseId: 'c6', studentId: 'u19', semester: 1, internal: 47, exam: 94, grade: 'O', gradePoint: 10.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm23', courseId: 'c7', studentId: 'u19', semester: 2, internal: 46, exam: 90, grade: 'O', gradePoint: 10.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
+    { id: 'm24', courseId: 'c1', studentId: 'u19', semester: 3, internal: 45, exam: 88, grade: 'A+', gradePoint: 9.0, status: MarkStatus.PUBLISHED, examCellVerified: true, hodVerified: true, principalVerified: true },
 ];
 
 export let ATTENDANCE: Attendance[] = [
@@ -201,12 +201,12 @@ export let MATERIALS: Material[] = [
 
 // FIX: Added missing BOOKS constant.
 export let BOOKS: Book[] = [
-    { id: 'b1', title: 'Data Structures and Algorithms', author: 'Narasimha Karumanchi', category: 'Computer Science', coverUrl: 'https://via.placeholder.com/300x400.png?text=DS+Cover' },
-    { id: 'b2', title: 'Thermodynamics: An Engineering Approach', author: 'Yunus A. Çengel', category: 'Mechanical Engineering', coverUrl: 'https://via.placeholder.com/300x400.png?text=Thermo+Cover' },
-    { id: 'b3', title: 'Structural Analysis', author: 'R.C. Hibbeler', category: 'Civil Engineering', coverUrl: 'https://via.placeholder.com/300x400.png?text=Civil+Cover' },
-    { id: 'b4', title: 'Concepts of Modern Physics', author: 'Arthur Beiser', category: 'Science & Humanities', coverUrl: 'https://via.placeholder.com/300x400.png?text=Physics+Cover' },
-    { id: 'b5', title: 'Clean Code', author: 'Robert C. Martin', category: 'Computer Science', coverUrl: 'https://via.placeholder.com/300x400.png?text=Code+Cover' },
-    { id: 'b6', title: 'Design of Machine Elements', author: 'V. B. Bhandari', category: 'Mechanical Engineering', coverUrl: 'https://via.placeholder.com/300x400.png?text=Machine+Cover' },
+    { id: 'b1', title: 'Data Structures and Algorithms', author: 'Narasimha Karumanchi', bookUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', imageUrl: 'https://via.placeholder.com/300x400.png?text=DS+Cover' },
+    { id: 'b2', title: 'Thermodynamics: An Engineering Approach', author: 'Yunus A. Çengel', bookUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', imageUrl: 'https://via.placeholder.com/300x400.png?text=Thermo+Cover' },
+    { id: 'b3', title: 'Structural Analysis', author: 'R.C. Hibbeler', bookUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', imageUrl: 'https://via.placeholder.com/300x400.png?text=Civil+Cover' },
+    { id: 'b4', title: 'Concepts of Modern Physics', author: 'Arthur Beiser', bookUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', imageUrl: 'https://via.placeholder.com/300x400.png?text=Physics+Cover' },
+    { id: 'b5', title: 'Clean Code', author: 'Robert C. Martin', bookUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', imageUrl: 'https://via.placeholder.com/300x400.png?text=Code+Cover' },
+    { id: 'b6', title: 'Design of Machine Elements', author: 'V. B. Bhandari', bookUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', imageUrl: 'https://via.placeholder.com/300x400.png?text=Machine+Cover' },
 ];
 
 // FIX: Added missing EXAM_SCHEDULES constant.
