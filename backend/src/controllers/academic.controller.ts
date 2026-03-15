@@ -7,6 +7,11 @@ const isPrismaKnownError = (error: unknown): error is Prisma.PrismaClientKnownRe
     return error instanceof Prisma.PrismaClientKnownRequestError;
 };
 
+const isNotNullConstraintError = (error: unknown, columnName: string): boolean => {
+    const message = error instanceof Error ? error.message : '';
+    return message.includes(`null value in column "${columnName}"`) && message.includes('violates not-null constraint');
+};
+
 const calculateGradeAndPoints = (internal: number, exam: number): { grade: string, gradePoint: number } => {
     const total = Math.round(internal + (exam / 2)); // Total out of 100, rounded
     if (total >= 91) return { grade: 'O', gradePoint: 10.0 };
@@ -441,6 +446,13 @@ export const createCourse = async (req: Request, res: Response): Promise<void> =
                 return;
             }
         }
+
+        const requestedStaffId = typeof req.body?.staffId === 'string' && req.body.staffId.trim() ? req.body.staffId.trim() : null;
+        if (requestedStaffId === null && isNotNullConstraintError(error, 'staffId')) {
+            res.status(500).json({ message: 'Database schema is outdated. Apply the latest Prisma migrations on the server and try again.' });
+            return;
+        }
+
         res.status(500).json({ message: 'Internal server error' });
     }
 };
