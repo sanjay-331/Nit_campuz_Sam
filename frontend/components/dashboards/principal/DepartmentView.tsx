@@ -111,7 +111,7 @@ const DepartmentDetail: React.FC<{ department: Department, users: User[], onSele
             case 2: return '2nd Year';
             case 3: return '3rd Year';
             case 4: return 'Final Year';
-            default: return `${year}th Year`;
+            default: return `${year}st Year`;
         }
     };
 
@@ -168,7 +168,7 @@ const DepartmentView: React.FC = () => {
             case 2: return '2nd Year';
             case 3: return '3rd Year';
             case 4: return 'Final Year';
-            default: return `${year}th Year`;
+            default: return `${year}st Year`;
         }
     };
 

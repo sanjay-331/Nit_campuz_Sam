@@ -119,6 +119,19 @@ const calculateGradeAndPoints = (internal: number, exam: number): { grade: Grade
     return { grade: 'RA', gradePoint: 0.0 };
 };
 
+const normalizeStudentStatus = (status: unknown): StudentStatus => {
+    switch (String(status ?? '').toUpperCase()) {
+        case 'ACTIVE':
+            return StudentStatus.ACTIVE;
+        case 'ALUMNI':
+            return StudentStatus.ALUMNI;
+        case 'INACTIVE':
+            return StudentStatus.INACTIVE;
+        default:
+            return StudentStatus.ACTIVE;
+    }
+};
+
 
 // --- FETCH DATA SAGAS ---
 
@@ -133,7 +146,11 @@ function* handleFetchUsers() {
 
         if (response.ok) {
             const data: User[] = yield sagaEffects.call([response, 'json']);
-            yield sagaEffects.put(setUsers(data));
+            const normalizedUsers = data.map(user => ({
+                ...user,
+                status: normalizeStudentStatus((user as { status?: unknown }).status),
+            }));
+            yield sagaEffects.put(setUsers(normalizedUsers));
         } else {
             console.error('Failed to fetch users');
         }
@@ -580,8 +597,7 @@ function* handlePromoteClass(action: PayloadAction<{ departmentId: string; year:
         if (response.ok) {
             const data: { message: string } = yield sagaEffects.call([response, 'json']);
             yield sagaEffects.put(showToast({ type: 'success', message: data.message }));
-            // To be fully functional, we should dispatch a fetch users action here,
-            // but for now we'll rely on page reload or existing data flow.
+            yield sagaEffects.put(fetchUsersRequest());
         } else {
             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
             throw new Error(errorData.message || 'Failed to promote class.');

@@ -391,11 +391,26 @@ export const updateUsersStatus = async (req: Request, res: Response): Promise<vo
 export const transferStudents = async (req: Request, res: Response): Promise<void> => {
     try {
         const { studentIds, newDepartmentId } = req.body;
+
+        if (!Array.isArray(studentIds) || studentIds.length === 0 || !newDepartmentId) {
+            res.status(400).json({ message: 'studentIds and newDepartmentId are required' });
+            return;
+        }
+
         await prisma.user.updateMany({
             where: { id: { in: studentIds } },
             data: { departmentId: newDepartmentId }
         });
-        res.json({ message: `Successfully transferred ${studentIds.length} students` });
+
+        await prisma.studentProfile.updateMany({
+            where: {
+                userId: { in: studentIds },
+                year: 1,
+            },
+            data: { year: 2 }
+        });
+
+        res.json({ message: `Successfully transferred ${studentIds.length} students to their new department and promoted them to 2nd year` });
     } catch (error) {
         console.error('Error transferring students:', error);
         res.status(500).json({ message: 'Internal server error' });

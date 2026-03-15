@@ -29,6 +29,10 @@ const AlumniManagement: React.FC = () => {
     const graduationYears = useMemo(() => [...new Set(alumniList.map((a: any) => a.graduationYear))].sort((a: any, b: any) => b - a), [alumniList]);
 
     useEffect(() => {
+        setAlumni(alumniList);
+    }, [alumniList]);
+
+    useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 1000);
         return () => clearTimeout(timer);
     }, []);

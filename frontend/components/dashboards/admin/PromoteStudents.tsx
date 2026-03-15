@@ -17,14 +17,18 @@ const PromoteStudents: React.FC = () => {
 
     const [confirmAction, setConfirmAction] = useState<any>(null);
 
+    const firstYearDepartment = useMemo(() => {
+        return allDepartments.find(department => /science\s*(?:&|and)\s*humanities/i.test(department.name));
+    }, [allDepartments]);
+
     // --- First Year Transfer Logic ---
     const shStudents = useMemo(() => {
         return allUsers.filter(u =>
             u.role === UserRole.STUDENT &&
-            u.departmentId === 'd4' && // Science & Humanities ID
+            u.departmentId === firstYearDepartment?.id &&
             (u as Student).year === 1
         ) as Student[];
-    }, [allUsers]);
+    }, [allUsers, firstYearDepartment]);
 
     const shSections = useMemo(() => {
         const sections: Record<string, { students: Student[], targetDepartmentId: string }> = {};
@@ -40,9 +44,13 @@ const PromoteStudents: React.FC = () => {
     // FIX: Explicitly type the state to prevent inference issues with Object.entries.
     const [sectionTransferState, setSectionTransferState] = useState<Record<string, { students: Student[], targetDepartmentId: string }>>(shSections);
 
+    React.useEffect(() => {
+        setSectionTransferState(shSections);
+    }, [shSections]);
+
     const targetDepartments = useMemo(() => {
-        return allDepartments.filter(d => d.id !== 'd4'); // Exclude First Year
-    }, [allDepartments]);
+        return allDepartments.filter(d => d.id !== firstYearDepartment?.id);
+    }, [allDepartments, firstYearDepartment]);
 
     const handleTargetDeptChange = (section: string, departmentId: string) => {
         setSectionTransferState(prev => ({
@@ -66,7 +74,11 @@ const PromoteStudents: React.FC = () => {
     const promotableClasses = useMemo(() => {
         const classes: Record<string, Student[]> = {};
         allUsers.forEach(user => {
-            if (user.role === UserRole.STUDENT && user.departmentId !== 'd4' && user.status === StudentStatus.ACTIVE) {
+            if (
+                user.role === UserRole.STUDENT &&
+                user.departmentId !== firstYearDepartment?.id &&
+                user.status === StudentStatus.ACTIVE
+            ) {
                 const student = user as Student;
                 const key = `${student.departmentId}_${student.year}`;
                 if (!classes[key]) {
@@ -87,7 +99,7 @@ const PromoteStudents: React.FC = () => {
                 studentCount: students.length,
             };
         }).sort((a, b) => a.departmentName.localeCompare(b.departmentName) || a.year - b.year);
-    }, [allUsers, allDepartments]);
+    }, [allUsers, allDepartments, firstYearDepartment]);
 
     const handlePromote = (departmentId: string, year: number) => {
         dispatch(promoteClassRequest({ departmentId, year }));
@@ -116,7 +128,7 @@ const PromoteStudents: React.FC = () => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>First Year First Year Transfer</CardTitle>
+                    <CardTitle>First Year Transfer</CardTitle>
                     <CardDescription>Transfer sections of first-year students to their new departments for the second year.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -144,7 +156,14 @@ const PromoteStudents: React.FC = () => {
                             })}
                         </div>
                     ) : (
-                        <EmptyState title="No First Year Students" message="There are currently no first-year students in the Science & Humanities department." />
+                        <EmptyState
+                            title="No First Year Students"
+                            message={
+                                firstYearDepartment
+                                    ? `There are currently no first-year students in the ${firstYearDepartment.name} department.`
+                                    : 'No first-year transfer department was found. Add or rename the Science & Humanities department to use section transfer.'
+                            }
+                        />
                     )}
                 </CardContent>
             </Card>
