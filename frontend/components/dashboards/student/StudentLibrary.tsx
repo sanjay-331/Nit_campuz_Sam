@@ -1,16 +1,22 @@
-import React, { useState, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Card, CardContent } from '../../ui/Card';
 import { Input } from '../../ui/Input';
 import { SearchIcon, ExternalLinkIcon } from '../../icons/Icons';
-import { selectAllBooks } from '../../../store/slices/appSlice';
+import { selectAllBooks, fetchBooksRequest } from '../../../store/slices/appSlice';
 import { motion } from 'framer-motion';
 
 const StudentLibrary: React.FC = () => {
+    const dispatch = useDispatch();
     const books = useSelector(selectAllBooks);
     const [searchTerm, setSearchTerm] = useState('');
 
+    useEffect(() => {
+        dispatch(fetchBooksRequest());
+    }, [dispatch]);
+
     const filteredBooks = useMemo(() => {
+
         return books.filter(book => {
             const searchMatch = searchTerm === '' || 
                 book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 

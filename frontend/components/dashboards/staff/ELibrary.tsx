@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../ui/Card';
 import { Input } from '../../ui/Input';
 import Button from '../../ui/Button';
 import { SearchIcon, PlusIcon, TrashIcon, ExternalLinkIcon } from '../../icons/Icons';
-import { selectAllBooks, addBookRequest, deleteBookRequest } from '../../../store/slices/appSlice';
+import { selectAllBooks, addBookRequest, deleteBookRequest, fetchBooksRequest } from '../../../store/slices/appSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Book } from '../../../types';
 
@@ -13,6 +13,10 @@ const ELibrary: React.FC = () => {
     const books = useSelector(selectAllBooks);
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+    useEffect(() => {
+        dispatch(fetchBooksRequest());
+    }, [dispatch]);
     
     const [newBook, setNewBook] = useState<Omit<Book, 'id'>>({
         title: '',
