@@ -7,12 +7,14 @@ import { SearchIcon, PlusIcon, TrashIcon, ExternalLinkIcon } from '../../icons/I
 import { selectAllBooks, addBookRequest, deleteBookRequest, fetchBooksRequest } from '../../../store/slices/appSlice';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Book } from '../../../types';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from '../../ui/Dialog';
 
 const ELibrary: React.FC = () => {
     const dispatch = useDispatch();
     const books = useSelector(selectAllBooks);
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
 
     useEffect(() => {
         dispatch(fetchBooksRequest());
@@ -42,9 +44,10 @@ const ELibrary: React.FC = () => {
         setIsAddModalOpen(false);
     };
 
-    const handleDeleteBook = (id: string) => {
-        if (window.confirm('Are you sure you want to delete this book?')) {
-            dispatch(deleteBookRequest(id));
+    const confirmDeleteBook = () => {
+        if (bookToDelete) {
+            dispatch(deleteBookRequest(bookToDelete.id));
+            setBookToDelete(null);
         }
     };
 
@@ -77,6 +80,26 @@ const ELibrary: React.FC = () => {
                     </div>
                 </CardContent>
             </Card>
+
+            <Dialog open={!!bookToDelete} onOpenChange={(open) => !open && setBookToDelete(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Book</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete <span className="font-semibold text-slate-800">{bookToDelete?.title}</span>? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="secondary" onClick={() => setBookToDelete(null)}>Cancel</Button>
+                        <Button 
+                            className="bg-red-500 hover:bg-red-600 text-white" 
+                            onClick={confirmDeleteBook}
+                        >
+                            Delete Book
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <AnimatePresence>
                 {isAddModalOpen && (
@@ -175,7 +198,7 @@ const ELibrary: React.FC = () => {
                                         <ExternalLinkIcon className="w-5 h-5" />
                                     </a>
                                     <button 
-                                        onClick={() => handleDeleteBook(book.id)}
+                                        onClick={() => setBookToDelete(book)}
                                         className="p-2 bg-red-500/80 backdrop-blur-md rounded-lg text-white hover:bg-red-600 transition-colors shadow-lg"
                                     >
                                         <TrashIcon className="w-5 h-5" />
