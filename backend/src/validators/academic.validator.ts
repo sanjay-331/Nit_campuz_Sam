@@ -47,7 +47,7 @@ export const createCourseSchema = z.object({
   body: z.object({
     name: z.string().min(1, 'Course name is required'),
     code: z.string().min(1, 'Course code is required'),
-    staffId: z.string().min(1, 'Staff ID is required'),
+    staffId: z.string().optional(),
     departmentId: z.string().min(1, 'Department ID is required'),
     credits: z.union([z.number(), z.string()]),
     semester: z.union([z.number(), z.string()])

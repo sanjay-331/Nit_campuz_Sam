@@ -367,7 +367,14 @@ export const createCourse = async (req: Request, res: Response): Promise<void> =
     try {
         const { name, code, staffId, departmentId, credits, semester } = req.body;
         const course = await prisma.course.create({
-            data: { name, code, staffId, departmentId, credits: Number(credits), semester: Number(semester) }
+            data: { 
+                name, 
+                code, 
+                staffId: staffId || null,  // Allow null (unassigned)
+                departmentId, 
+                credits: Number(credits), 
+                semester: Number(semester) 
+            }
         });
         res.status(201).json(course);
     } catch (error) {
@@ -431,6 +438,27 @@ export const getClasses = async (req: Request, res: Response): Promise<void> => 
         const classes = await prisma.class.findMany();
         res.json(classes);
     } catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const assignCourse = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { courseId, staffId } = req.body;
+        
+        if (!courseId || !staffId) {
+            res.status(400).json({ message: 'Course ID and Staff ID are required' });
+            return;
+        }
+
+        const updatedCourse = await prisma.course.update({
+            where: { id: courseId },
+            data: { staffId }
+        });
+
+        res.json(updatedCourse);
+    } catch (error) {
+        console.error('Error assigning course:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

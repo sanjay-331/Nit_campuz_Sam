@@ -1,7 +1,7 @@
 import React from 'react';
 // FIX: Updated router components to be compatible with react-router-dom v6+.
 // Replaced Switch with Routes and updated Route syntax.
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import StudentHome from './student/StudentHome';
@@ -46,6 +46,7 @@ const StudentDashboard: React.FC = () => {
             <Route path="/library" element={<AnimatedPage><StudentLibrary /></AnimatedPage>} />
             <Route path="/leave-od" element={<AnimatedPage><OnDuty /></AnimatedPage>} />
             <Route path="/documents" element={<AnimatedPage><Documents /></AnimatedPage>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
 };

@@ -4,9 +4,66 @@ import { UserRole } from '@prisma/client';
 
 export const getAllMentorAssignments = async (req: Request, res: Response): Promise<void> => {
     try {
-        const assignments = await prisma.mentorAssignment.findMany();
-        res.json(assignments);
+        const assignments = await prisma.mentorAssignment.findMany({
+            include: {
+                student: {
+                    include: {
+                        studentProfile: true,
+                        department: true
+                    }
+                },
+                mentor: true
+            }
+        });
+
+        const sanitizedAssignments = assignments.map(a => {
+            const { student, ...rest } = a;
+            const { password, studentProfile, ...studentData } = student as any;
+            return {
+                ...rest,
+                student: {
+                    ...studentData,
+                    ...studentProfile
+                }
+            };
+        });
+
+        res.json(sanitizedAssignments);
     } catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const getMyMentees = async (req: any, res: Response): Promise<void> => {
+    try {
+        const mentorId = req.user.id;
+        const mentees = await prisma.mentorAssignment.findMany({
+            where: { mentorId },
+            include: {
+                student: {
+                    include: {
+                        studentProfile: true,
+                        department: true
+                    }
+                }
+            }
+        });
+
+        const sanitizedMentees = mentees.map(m => {
+            const { student, ...rest } = m;
+            const { password, studentProfile, ...studentData } = student as any;
+            return {
+                ...rest,
+                student: {
+                    ...studentData,
+                    ...studentProfile
+                }
+            };
+        });
+
+        res.json(sanitizedMentees);
+    } catch (error) {
+        console.error('Error fetching mentees:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };

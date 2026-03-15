@@ -39,12 +39,12 @@ const LoginPage: React.FC = () => {
   }
   
   const quickLoginUsers = [
-    { email: 'admin@nit.edu', role: 'Admin' },
-    { email: 'principal@nit.edu', role: 'Principal' },
-    { email: 'hod@nit.edu', role: 'HOD' },
-    { email: 'staff@nit.edu', role: 'Staff' },
-    { email: 'student@nit.edu', role: 'Student' },
-    { email: 'examcell@nit.edu', role: 'Exam Cell' },
+    { email: 'admin@nitcampuz.edu', role: 'Admin' },
+    { email: 'principal@nitcampuz.edu', role: 'Principal' },
+    { email: 'hod.cse@nitcampuz.edu', role: 'HOD' },
+    { email: 'sarah.w@nitcampuz.edu', role: 'Staff' },
+    { email: 'alex.j@nitcampuz.edu', role: 'Student' },
+    { email: 'examcell@nitcampuz.edu', role: 'Exam Cell' },
   ];
 
   const tryLogin = () => {

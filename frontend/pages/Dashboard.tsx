@@ -4,7 +4,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser } from '../store/slices/authSlice';
-import { fetchUsersRequest, fetchDepartmentsRequest, fetchCoursesRequest, fetchAssignmentsRequest, fetchSubmissionsRequest, fetchMarksRequest, fetchAttendanceRequest, fetchMaterialsRequest, fetchExamSchedulesRequest, fetchMentorAssignmentsRequest, fetchRemarksRequest, fetchTutorsRequest, fetchTutorApplicationsRequest, fetchTutoringSessionsRequest, fetchOnDutyApplicationsRequest, fetchNoDuesCertificatesRequest, fetchBooksRequest } from '../store/slices/appSlice';
+import { fetchUsersRequest, fetchDepartmentsRequest, fetchCoursesRequest, fetchAssignmentsRequest, fetchSubmissionsRequest, fetchMarksRequest, fetchAttendanceRequest, fetchMaterialsRequest, fetchExamSchedulesRequest, fetchMentorAssignmentsRequest, fetchRemarksRequest, fetchTutorsRequest, fetchTutorApplicationsRequest, fetchTutoringSessionsRequest, fetchOnDutyApplicationsRequest, fetchNoDuesCertificatesRequest, fetchBooksRequest, fetchMyMenteesRequest } from '../store/slices/appSlice';
 import { UserRole } from '../types';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import AIChatbot from '../components/AIChatbot';
@@ -82,6 +82,8 @@ const DashboardPage: React.FC = () => {
           dispatch(fetchAssignmentsRequest());
           dispatch(fetchSubmissionsRequest());
           dispatch(fetchOnDutyApplicationsRequest());
+          dispatch(fetchMyMenteesRequest());
+          dispatch(fetchRemarksRequest());
           break;
         case UserRole.STUDENT:
           dispatch(fetchAssignmentsRequest());

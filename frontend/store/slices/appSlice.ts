@@ -83,6 +83,8 @@ const appSlice = createSlice({
         },
         assignHODRequest: (state, action: PayloadAction<{ deptId: string; staffId: string } | { deptId: string; newUser: { name: string; email: string; contact?: string } }>) => {},
         assignAdvisorRequest: (state, action: PayloadAction<{ departmentId: string; year: number; advisorId: string }>) => {},
+        assignCourseRequest: (state, action: PayloadAction<{ courseId: string; staffId: string }>) => {},
+        createCourseRequest: (state, action: PayloadAction<{ name: string; code: string; departmentId: string; credits: number; semester: number; staffId?: string }>) => {},
         fetchClassesRequest: (state) => {},
         fetchCoursesRequest: (state) => {},
         setCourses: (state, action: PayloadAction<Course[]>) => {
@@ -160,6 +162,7 @@ const appSlice = createSlice({
         setRemarks: (state, action: PayloadAction<Remark[]>) => {
             state.remarks = action.payload;
         },
+        fetchMyMenteesRequest: (state) => {},
 
         // OD Actions
         applyForODRequest: (state, action: PayloadAction<Omit<OnDutyApplication, 'id' | 'status' | 'appliedAt' | 'advisorApprovalId' | 'hodApprovalId' | 'principalApprovalId' | 'rejectedById'>>) => {},
@@ -235,6 +238,8 @@ export const {
     setDepartments,
     assignHODRequest,
     assignAdvisorRequest,
+    assignCourseRequest,
+    createCourseRequest,
     fetchClassesRequest,
     fetchCoursesRequest,
     setCourses,
@@ -277,6 +282,7 @@ export const {
     setMentorAssignments,
     fetchRemarksRequest,
     setRemarks,
+    fetchMyMenteesRequest,
     applyForODRequest,
     processODRequest,
     updateODApplicationRequest,

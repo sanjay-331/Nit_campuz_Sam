@@ -16,6 +16,8 @@ import {
     setDepartments,
     assignHODRequest,
     assignAdvisorRequest,
+    assignCourseRequest,
+    createCourseRequest,
     fetchClassesRequest,
     fetchCoursesRequest,
     setCourses,
@@ -54,6 +56,7 @@ import {
     setMentorAssignments,
     fetchRemarksRequest,
     setRemarks,
+    fetchMyMenteesRequest,
     applyForODRequest,
     processODRequest,
     updateODApplicationRequest,
@@ -262,6 +265,24 @@ function* handleFetchMentorAssignments() {
         }
     } catch (error) {
         console.error('Error fetching mentor assignments:', error);
+    }
+}
+
+function* handleFetchMyMentees() {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        if (!token) return;
+
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/mentoring/my-mentees`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data: MentorAssignment[] = yield sagaEffects.call([response, 'json']);
+            yield sagaEffects.put(setMentorAssignments(data));
+        }
+    } catch (error) {
+        console.error('Error fetching my mentees:', error);
     }
 }
 
@@ -819,6 +840,63 @@ function* handleAssignAdvisor(action: PayloadAction<{ departmentId: string; year
     }
 }
 
+function* handleAssignCourse(action: PayloadAction<{ courseId: string; staffId: string }>) {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/assign-course`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Course assigned successfully.' }));
+            yield sagaEffects.put(fetchCoursesRequest());
+            yield sagaEffects.put(fetchUsersRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to assign course.');
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to assign course.' }));
+        }
+    }
+}
+
+function* handleCreateCourse(action: PayloadAction<{ name: string; code: string; departmentId: string; credits: number; semester: number; staffId?: string }>) {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/academic/courses/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Course created successfully.' }));
+            yield sagaEffects.put(fetchCoursesRequest());
+        } else {
+             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+             throw new Error(errorData.message || 'Failed to create course.');
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to create course.' }));
+        }
+    }
+}
+
 // --- STAFF SAGAS ---
 
 function* handleSubmitAttendance(action: PayloadAction<{ courseId: string; records: Record<string, boolean>}>) {
@@ -1262,6 +1340,7 @@ function* handleAddRemark(action: PayloadAction<Omit<Remark, 'id' | 'timestamp'>
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Remark added successfully.' }));
+            yield sagaEffects.put(fetchRemarksRequest());
         } else {
              const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
              throw new Error(errorData.message || 'Failed to add remark.');
@@ -1605,6 +1684,8 @@ function* appSaga() {
   yield sagaEffects.takeLatest(addDepartmentRequest.type, handleAddDepartment);
   yield sagaEffects.takeLatest(assignHODRequest.type, handleAssignHOD);
   yield sagaEffects.takeLatest(assignAdvisorRequest.type, handleAssignAdvisor);
+  yield sagaEffects.takeLatest(assignCourseRequest.type, handleAssignCourse);
+  yield sagaEffects.takeLatest(createCourseRequest.type, handleCreateCourse);
   yield sagaEffects.takeLatest(submitAttendanceRequest.type, handleSubmitAttendance);
   yield sagaEffects.takeLatest(saveMarksRequest.type, handleSaveMarks);
   yield sagaEffects.takeLatest(verifyMarksRequest.type, handleVerifyMarks);
@@ -1646,6 +1727,7 @@ function* appSaga() {
   yield sagaEffects.takeLatest(fetchMaterialsRequest.type, handleFetchMaterials);
   yield sagaEffects.takeLatest(fetchExamSchedulesRequest.type, handleFetchExamSchedules);
   yield sagaEffects.takeLatest(fetchMentorAssignmentsRequest.type, handleFetchMentorAssignments);
+  yield sagaEffects.takeLatest(fetchMyMenteesRequest.type, handleFetchMyMentees);
   yield sagaEffects.takeLatest(fetchRemarksRequest.type, handleFetchRemarks);
   yield sagaEffects.takeLatest(fetchTutorsRequest.type, handleFetchTutors);
   yield sagaEffects.takeLatest(fetchTutorApplicationsRequest.type, handleFetchTutorApplications);

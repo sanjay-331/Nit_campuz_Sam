@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { saveMarks, verifyMarks, publishMarks, submitAttendance, getAllCourses, getAllDepartments, getAllMarks, getAllAttendance, getAllMaterials, createMaterial, getAllExamSchedules, createExamSchedule, createDepartment, createCourse, assignHOD, assignAdvisor, getClasses } from '../controllers/academic.controller';
+import { saveMarks, verifyMarks, publishMarks, submitAttendance, getAllCourses, getAllDepartments, getAllMarks, getAllAttendance, getAllMaterials, createMaterial, getAllExamSchedules, createExamSchedule, createDepartment, createCourse, assignHOD, assignAdvisor, getClasses, assignCourse } from '../controllers/academic.controller';
 
 import { requireAuth, requireRole } from '../middlewares/auth.middleware';
 import { validate } from '../middleware/validate';
@@ -35,5 +35,6 @@ router.post('/departments', requireRole([UserRole.ADMIN]), validate(createDepart
 router.post('/courses/create', requireRole([UserRole.ADMIN, UserRole.HOD]), validate(createCourseSchema), createCourse);
 router.post('/assign-hod', requireRole([UserRole.ADMIN]), validate(assignHODSchema), assignHOD);
 router.post('/assign-advisor', requireRole([UserRole.ADMIN, UserRole.HOD]), validate(assignAdvisorSchema), assignAdvisor);
+router.post('/assign-course', requireRole([UserRole.ADMIN, UserRole.HOD]), assignCourse);
 
 export default router;

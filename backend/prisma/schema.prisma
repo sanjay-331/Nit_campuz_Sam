@@ -49,6 +49,12 @@ model User {
 
   department Department? @relation(fields: [departmentId], references: [id])
   documents  StudentDocument[]
+
+  // Mentorship relations
+  mentees          MentorAssignment[] @relation("MentorToStudents")
+  mentorAssignment MentorAssignment?  @relation("StudentToMentor")
+  remarksGiven     Remark[]           @relation("MentorRemarks")
+  remarksReceived  Remark[]           @relation("StudentRemarks")
 }
 
 model StudentProfile {
@@ -101,10 +107,10 @@ model Class {
 }
 
 model Course {
-  id           String @id @default(uuid())
+  id           String  @id @default(uuid())
   name         String
-  code         String @unique
-  staffId      String // Instructor
+  code         String  @unique
+  staffId      String? // Instructor (optional - can be assigned later)
   departmentId String
   credits      Int
   semester     Int
@@ -185,6 +191,9 @@ model MentorAssignment {
   id        String @id @default(uuid())
   studentId String @unique
   mentorId  String
+
+  student User @relation("StudentToMentor", fields: [studentId], references: [id])
+  mentor  User @relation("MentorToStudents", fields: [mentorId], references: [id])
 }
 
 model Remark {
@@ -193,6 +202,9 @@ model Remark {
   mentorId  String
   text      String
   timestamp DateTime @default(now())
+
+  student User @relation("StudentRemarks", fields: [studentId], references: [id])
+  mentor  User @relation("MentorRemarks", fields: [mentorId], references: [id])
 }
 
 model OnDutyApplication {

@@ -63,6 +63,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
   ],
   [UserRole.STAFF]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon },
+    { name: 'Mentees', path: '/mentees', icon: HeartIcon },
     { name: 'Attendance', path: '/attendance', icon: ClipboardListIcon },
     { name: 'Marks', path: '/marks', icon: DocumentReportIcon },
     { name: 'Assignments', path: '/assignments', icon: PencilIcon },
@@ -73,7 +74,6 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     // FIX: Added missing 'icon' property.
     { name: 'Class Advisor', path: '/class-advisor', icon: UserIcon, isAdvisor: true },
     // FIX: Added missing 'icon' property.
-    { name: 'My Mentees', path: '/my-mentees', icon: HeartIcon, isMentor: true },
   ],
   [UserRole.STUDENT]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon },

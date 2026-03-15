@@ -1,7 +1,7 @@
 import React from 'react';
 // FIX: Updated router components to be compatible with react-router-dom v6+.
 // Replaced Switch with Routes and updated Route syntax.
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import ExamCellHome from './exam-cell/ExamCellHome';
@@ -42,6 +42,7 @@ const ExamCellDashboard: React.FC = () => {
             <Route path="/results" element={<AnimatedPage><ResultPublishing /></AnimatedPage>} />
             <Route path="/reports" element={<AnimatedPage><ReportsAnalytics /></AnimatedPage>} />
             <Route path="/schedules" element={<AnimatedPage><ExamSchedules /></AnimatedPage>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
 };

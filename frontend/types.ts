@@ -83,7 +83,7 @@ export interface Course {
     id: string;
     name: string;
     code: string;
-    staffId: string;
+    staffId?: string;   // Optional — can be unassigned
     departmentId: string;
     credits: number;
     semester: number;
@@ -264,6 +264,7 @@ export interface TutoringSession {
 export interface MentorAssignment {
   studentId: string;
   mentorId: string;
+  student?: Student;
 }
 
 export interface Remark {

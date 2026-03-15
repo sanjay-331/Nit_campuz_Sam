@@ -23,8 +23,8 @@ const ELibrary: React.FC = () => {
     const [newBook, setNewBook] = useState<Omit<Book, 'id'>>({
         title: '',
         author: '',
-        bookUrl: '',
-        imageUrl: ''
+        bookUrl: '', // Will treat as Image link based on user's feedback
+        imageUrl: '' // Will treat as PDF link based on user's feedback
     });
 
     const filteredBooks = useMemo(() => {
@@ -140,25 +140,27 @@ const ELibrary: React.FC = () => {
                                                 onChange={e => setNewBook({...newBook, author: e.target.value})}
                                             />
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-slate-700">Book URL (Link to PDF/Resource)</label>
-                                            <Input 
-                                                required
-                                                type="url"
-                                                placeholder="https://example.com/book.pdf"
-                                                value={newBook.bookUrl}
-                                                onChange={e => setNewBook({...newBook, bookUrl: e.target.value})}
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-slate-700">Image URL (Cover Image)</label>
-                                            <Input 
-                                                required
-                                                type="url"
-                                                placeholder="https://example.com/cover.jpg"
-                                                value={newBook.imageUrl}
-                                                onChange={e => setNewBook({...newBook, imageUrl: e.target.value})}
-                                            />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-slate-700">Cover Image URL</label>
+                                                <Input 
+                                                    required
+                                                    type="url"
+                                                    placeholder="https://example.com/cover.jpg"
+                                                    value={newBook.imageUrl}
+                                                    onChange={e => setNewBook({...newBook, imageUrl: e.target.value})}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-slate-700">Book PDF/Link</label>
+                                                <Input 
+                                                    required
+                                                    type="url"
+                                                    placeholder="https://example.com/book.pdf"
+                                                    value={newBook.bookUrl}
+                                                    onChange={e => setNewBook({...newBook, bookUrl: e.target.value})}
+                                                />
+                                            </div>
                                         </div>
                                         <div className="pt-4 flex gap-3">
                                             <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsAddModalOpen(false)}>
@@ -187,22 +189,24 @@ const ELibrary: React.FC = () => {
                             className="group relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                         >
                             <div className="aspect-[3/4] overflow-hidden relative">
-                                <a href={book.imageUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                                    <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <a href={book.bookUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                    <img src={book.bookUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 </a>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end justify-between p-4">
                                     <div className="flex gap-2 pointer-events-auto">
                                         <a 
-                                            href={book.bookUrl} 
+                                            href={book.imageUrl} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             className="p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white/40 transition-colors"
+                                            title="Open PDF"
                                         >
                                             <ExternalLinkIcon className="w-5 h-5" />
                                         </a>
                                         <button 
                                             onClick={() => setBookToDelete(book)}
                                             className="p-2 bg-red-500/80 backdrop-blur-md rounded-lg text-white hover:bg-red-600 transition-colors shadow-lg"
+                                            title="Delete Book"
                                         >
                                             <TrashIcon className="w-5 h-5" />
                                         </button>
