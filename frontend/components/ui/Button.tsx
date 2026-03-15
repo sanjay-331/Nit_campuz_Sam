@@ -24,6 +24,7 @@ const Button: React.FC<ButtonProps & MotionProps> = ({
   loading = false,
   ...props 
 }) => {
+  const buttonType = props.type ?? 'button';
   const baseStyles = 'inline-flex items-center justify-center font-semibold rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantStyles = {
@@ -47,6 +48,7 @@ const Button: React.FC<ButtonProps & MotionProps> = ({
       whileHover={!loading ? { y: -2, transition: { type: 'spring', stiffness: 300 } } : {}}
       whileTap={!loading ? { scale: 0.98, transition: { type: 'spring', stiffness: 400, damping: 15 } } : {}}
       disabled={props.disabled || loading}
+      type={buttonType}
       {...props}
     >
       {loading ? (

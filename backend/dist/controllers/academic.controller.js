@@ -1,11 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getClasses = exports.assignAdvisor = exports.assignHOD = exports.createCourse = exports.createDepartment = exports.createExamSchedule = exports.getAllExamSchedules = exports.createMaterial = exports.getAllMaterials = exports.getAllAttendance = exports.getAllMarks = exports.getAllDepartments = exports.getAllCourses = exports.submitAttendance = exports.publishMarks = exports.verifyMarks = exports.saveMarks = void 0;
+exports.assignCourse = exports.getClasses = exports.assignAdvisor = exports.assignHOD = exports.createCourse = exports.createDepartment = exports.createExamSchedule = exports.getAllExamSchedules = exports.createMaterial = exports.getAllMaterials = exports.getAllAttendance = exports.getAllMarks = exports.getAllDepartments = exports.getAllCourses = exports.submitAttendance = exports.publishMarks = exports.verifyMarks = exports.saveMarks = void 0;
 const db_1 = require("../db");
 const client_1 = require("@prisma/client");
 const socket_1 = require("../socket");
+const isPrismaKnownError = (error) => {
+    return error instanceof client_1.Prisma.PrismaClientKnownRequestError;
+};
 const calculateGradeAndPoints = (internal, exam) => {
-    const total = internal + (exam / 2); // Total out of 100
+    const total = Math.round(internal + (exam / 2)); // Total out of 100, rounded
     if (total >= 91)
         return { grade: 'O', gradePoint: 10.0 };
     if (total >= 81)
@@ -17,7 +20,9 @@ const calculateGradeAndPoints = (internal, exam) => {
     if (total >= 51)
         return { grade: 'B', gradePoint: 6.0 };
     if (total >= 50)
-        return { grade: 'C', gradePoint: 5.0 };
+        return { grade: 'C', gradePoint: 5.5 };
+    if (total >= 45)
+        return { grade: 'D', gradePoint: 5.0 };
     return { grade: 'RA', gradePoint: 0.0 };
 };
 const saveMarks = async (req, res) => {
@@ -351,13 +356,68 @@ exports.createDepartment = createDepartment;
 const createCourse = async (req, res) => {
     try {
         const { name, code, staffId, departmentId, credits, semester } = req.body;
+        const normalizedName = String(name ?? '').trim();
+        const normalizedCode = String(code ?? '').trim().toUpperCase();
+        const normalizedDepartmentId = String(departmentId ?? '').trim();
+        const normalizedStaffId = typeof staffId === 'string' && staffId.trim() ? staffId.trim() : null;
+        const parsedCredits = Number(credits);
+        const parsedSemester = Number(semester);
+        if (!normalizedName || !normalizedCode || !normalizedDepartmentId) {
+            res.status(400).json({ message: 'Course name, code, and department are required' });
+            return;
+        }
+        if (!Number.isInteger(parsedCredits) || parsedCredits < 1) {
+            res.status(400).json({ message: 'Credits must be a positive whole number' });
+            return;
+        }
+        if (!Number.isInteger(parsedSemester) || parsedSemester < 1) {
+            res.status(400).json({ message: 'Semester must be a positive whole number' });
+            return;
+        }
+        const department = await db_1.prisma.department.findUnique({
+            where: { id: normalizedDepartmentId }
+        });
+        if (!department) {
+            res.status(404).json({ message: 'Department not found' });
+            return;
+        }
+        if (normalizedStaffId) {
+            const staffUser = await db_1.prisma.user.findUnique({
+                where: { id: normalizedStaffId }
+            });
+            if (!staffUser) {
+                res.status(404).json({ message: 'Staff member not found' });
+                return;
+            }
+            if (staffUser.departmentId !== normalizedDepartmentId) {
+                res.status(400).json({ message: 'Staff member must belong to the same department' });
+                return;
+            }
+        }
         const course = await db_1.prisma.course.create({
-            data: { name, code, staffId, departmentId, credits: Number(credits), semester: Number(semester) }
+            data: {
+                name: normalizedName,
+                code: normalizedCode,
+                staffId: normalizedStaffId,
+                departmentId: normalizedDepartmentId,
+                credits: parsedCredits,
+                semester: parsedSemester
+            }
         });
         res.status(201).json(course);
     }
     catch (error) {
         console.error('Error creating course:', error);
+        if (isPrismaKnownError(error)) {
+            if (error.code === 'P2002') {
+                res.status(409).json({ message: 'A course with this code already exists' });
+                return;
+            }
+            if (error.code === 'P2003') {
+                res.status(400).json({ message: 'Invalid course relationship data' });
+                return;
+            }
+        }
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -419,3 +479,42 @@ const getClasses = async (req, res) => {
     }
 };
 exports.getClasses = getClasses;
+const assignCourse = async (req, res) => {
+    try {
+        const { courseId, staffId } = req.body;
+        if (!courseId || !staffId) {
+            res.status(400).json({ message: 'Course ID and Staff ID are required' });
+            return;
+        }
+        const [course, staffUser] = await Promise.all([
+            db_1.prisma.course.findUnique({ where: { id: courseId } }),
+            db_1.prisma.user.findUnique({ where: { id: staffId } })
+        ]);
+        if (!course) {
+            res.status(404).json({ message: 'Course not found' });
+            return;
+        }
+        if (!staffUser) {
+            res.status(404).json({ message: 'Staff member not found' });
+            return;
+        }
+        if (staffUser.departmentId !== course.departmentId) {
+            res.status(400).json({ message: 'Staff member must belong to the same department as the course' });
+            return;
+        }
+        const updatedCourse = await db_1.prisma.course.update({
+            where: { id: courseId },
+            data: { staffId }
+        });
+        res.json(updatedCourse);
+    }
+    catch (error) {
+        console.error('Error assigning course:', error);
+        if (isPrismaKnownError(error) && error.code === 'P2025') {
+            res.status(404).json({ message: 'Course not found' });
+            return;
+        }
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.assignCourse = assignCourse;

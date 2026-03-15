@@ -27,12 +27,14 @@ const MarksManagement: React.FC = () => {
     const [selectedCourse, setSelectedCourse] = useState<string>('');
     const [marks, setMarks] = useState<Record<string, Marks>>({});
 
-    const myCourses = useMemo(() => COURSES.filter(c => c.staffId === user?.id), [user]);
+    const myCourses = useMemo(() => COURSES.filter(c => c.staffId === user?.id), [user, COURSES]);
     const studentsInCourse = useMemo(() => {
         if (!selectedCourse) return [];
         const course = myCourses.find(c => c.id === selectedCourse);
-        return STUDENTS.filter(s => s.departmentId === course?.departmentId);
-    }, [selectedCourse, myCourses]);
+        if (!course) return [];
+        const targetYear = Math.floor((course.semester + 1) / 2);
+        return STUDENTS.filter(s => s.departmentId === course.departmentId && s.year === targetYear);
+    }, [selectedCourse, myCourses, STUDENTS]);
 
     useEffect(() => {
         setMarks({});

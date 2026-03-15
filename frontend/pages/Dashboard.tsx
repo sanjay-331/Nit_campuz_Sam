@@ -76,6 +76,7 @@ const DashboardPage: React.FC = () => {
           dispatch(fetchNoDuesCertificatesRequest());
           break;
         case UserRole.STAFF:
+          dispatch(fetchUsersRequest());
           dispatch(fetchAttendanceRequest());
           dispatch(fetchMarksRequest());
           dispatch(fetchMaterialsRequest());

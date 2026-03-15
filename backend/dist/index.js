@@ -19,6 +19,7 @@ const mentoring_routes_1 = __importDefault(require("./routes/mentoring.routes"))
 const tutoring_routes_1 = __importDefault(require("./routes/tutoring.routes"));
 const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
 const document_routes_1 = __importDefault(require("./routes/document.routes"));
+const library_routes_1 = __importDefault(require("./routes/library.routes"));
 const error_1 = require("./middleware/error");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -67,6 +68,7 @@ app.use('/api/mentoring', mentoring_routes_1.default);
 app.use('/api/tutoring', tutoring_routes_1.default);
 app.use('/api/admin', admin_routes_1.default);
 app.use('/api/documents', document_routes_1.default);
+app.use('/api/library', library_routes_1.default);
 // Basic healthcheck route
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'NIT Campuz Backend is running.' });

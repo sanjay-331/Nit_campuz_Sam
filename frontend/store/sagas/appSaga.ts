@@ -262,9 +262,15 @@ function* handleFetchMentorAssignments() {
         if (response.ok) {
             const data: MentorAssignment[] = yield sagaEffects.call([response, 'json']);
             yield sagaEffects.put(setMentorAssignments(data));
+        } else {
+            const errorData: { message?: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to fetch mentor assignments.');
         }
     } catch (error) {
         console.error('Error fetching mentor assignments:', error);
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        }
     }
 }
 
@@ -915,6 +921,7 @@ function* handleSubmitAttendance(action: PayloadAction<{ courseId: string; recor
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Attendance submitted successfully.' }));
+            yield sagaEffects.put(fetchAttendanceRequest());
         } else {
             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
             throw new Error(errorData.message || 'Failed to submit attendance.');
@@ -943,9 +950,8 @@ function* handleSaveMarks(action: PayloadAction<{ courseId: string; marks: Recor
         });
 
         if (response.ok) {
-            // Need to refetch users/marks here to update Redux store on success
-            // For now just show success, the frontend currently reloads data on mount
             yield sagaEffects.put(showToast({ type: 'success', message: 'Marks saved successfully.' }));
+            yield sagaEffects.put(fetchMarksRequest());
         } else {
             const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
             throw new Error(errorData.message || 'Failed to save marks.');
@@ -1056,7 +1062,7 @@ function* handleAddAssignment(action: PayloadAction<Omit<Assignment, 'id' | 'sub
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Assignment added successfully.' }));
-            // Ideally refetch assignments here to keep UI exactly in sync
+            yield sagaEffects.put(fetchAssignmentsRequest());
         } else {
              const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
              throw new Error(errorData.message || 'Failed to add assignment.');
@@ -1144,6 +1150,7 @@ function* handleGradeSubmission(action: PayloadAction<{ studentId: string; assig
 
         if (response.ok) {
             yield sagaEffects.put(showToast({ type: 'success', message: 'Submission graded successfully.' }));
+            yield sagaEffects.put(fetchSubmissionsRequest());
         } else {
              const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
              throw new Error(errorData.message || 'Failed to grade submission.');

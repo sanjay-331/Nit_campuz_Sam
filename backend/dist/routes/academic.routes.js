@@ -29,4 +29,5 @@ router.post('/departments', (0, auth_middleware_1.requireRole)([client_1.UserRol
 router.post('/courses/create', (0, auth_middleware_1.requireRole)([client_1.UserRole.ADMIN, client_1.UserRole.HOD]), (0, validate_1.validate)(academic_validator_1.createCourseSchema), academic_controller_1.createCourse);
 router.post('/assign-hod', (0, auth_middleware_1.requireRole)([client_1.UserRole.ADMIN]), (0, validate_1.validate)(academic_validator_1.assignHODSchema), academic_controller_1.assignHOD);
 router.post('/assign-advisor', (0, auth_middleware_1.requireRole)([client_1.UserRole.ADMIN, client_1.UserRole.HOD]), (0, validate_1.validate)(academic_validator_1.assignAdvisorSchema), academic_controller_1.assignAdvisor);
+router.post('/assign-course', (0, auth_middleware_1.requireRole)([client_1.UserRole.ADMIN, client_1.UserRole.HOD]), academic_controller_1.assignCourse);
 exports.default = router;

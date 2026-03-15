@@ -26,7 +26,8 @@ const getAllUsers = async (req, res) => {
         };
         const sanitizedUsers = users.map((u) => {
             const { password, studentProfile, alumniProfile, ...user } = u;
-            const profileData = studentProfile || alumniProfile || {};
+            const rawProfileData = studentProfile || alumniProfile || {};
+            const { id: profileId, userId: profileUserId, ...profileData } = rawProfileData;
             return {
                 ...user,
                 ...profileData,
@@ -144,22 +145,52 @@ exports.promoteClass = promoteClass;
 const createUser = async (req, res) => {
     try {
         const { name, email, role, departmentId, status, password, ...profileData } = req.body;
-        const existingUser = await db_1.prisma.user.findUnique({ where: { email } });
+        const normalizedName = String(name || '').trim();
+        const normalizedEmail = String(email || '').trim().toLowerCase();
+        const normalizedDepartmentId = typeof departmentId === 'string' ? departmentId.trim() : '';
+        if (!normalizedName || !normalizedEmail) {
+            res.status(400).json({ message: 'Name and email are required' });
+            return;
+        }
+        if (!/\S+@\S+\.\S+/.test(normalizedEmail)) {
+            res.status(400).json({ message: 'A valid email address is required' });
+            return;
+        }
+        const prismaRole = (role || client_1.UserRole.STUDENT).toUpperCase();
+        const prismaStatus = (status || 'ACTIVE').toUpperCase();
+        if (!normalizedDepartmentId) {
+            res.status(400).json({ message: 'Department is required' });
+            return;
+        }
+        const department = await db_1.prisma.department.findUnique({
+            where: { id: normalizedDepartmentId }
+        });
+        if (!department) {
+            res.status(404).json({ message: 'Department not found' });
+            return;
+        }
+        if (prismaRole === client_1.UserRole.STUDENT) {
+            const regNo = String(profileData.regNo || '').trim();
+            const section = String(profileData.section || '').trim();
+            const year = Number(profileData.year);
+            if (!regNo || !section || !Number.isInteger(year) || year < 1) {
+                res.status(400).json({ message: 'Student regNo, year, and section are required' });
+                return;
+            }
+        }
+        const existingUser = await db_1.prisma.user.findUnique({ where: { email: normalizedEmail } });
         if (existingUser) {
             res.status(400).json({ message: 'User with this email already exists' });
             return;
         }
         const hashedPassword = await bcrypt_1.default.hash(password || 'password123', 10);
-        // Normalize role and status for Prisma enums (usually uppercase)
-        const prismaRole = (role || client_1.UserRole.STUDENT).toUpperCase();
-        const prismaStatus = (status || 'ACTIVE').toUpperCase();
         const newUser = await db_1.prisma.user.create({
             data: {
-                name,
-                email,
+                name: normalizedName,
+                email: normalizedEmail,
                 password: hashedPassword,
                 role: prismaRole,
-                departmentId: departmentId && departmentId !== '' ? departmentId : null,
+                departmentId: normalizedDepartmentId,
                 status: prismaStatus,
                 permissions: []
             }
@@ -168,10 +199,10 @@ const createUser = async (req, res) => {
             await db_1.prisma.studentProfile.create({
                 data: {
                     userId: newUser.id,
-                    regNo: profileData.regNo || `REG-${newUser.id.substring(0, 8)}`,
-                    section: profileData.section || 'A',
+                    regNo: String(profileData.regNo).trim(),
+                    section: String(profileData.section).trim(),
                     admissionYear: Number(profileData.admissionYear) || new Date().getFullYear(),
-                    year: Number(profileData.year) || 1,
+                    year: Number(profileData.year),
                     cgpa: 0.0
                 }
             });

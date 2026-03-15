@@ -6,6 +6,7 @@ export interface AuthRequest extends Request {
   user?: {
     id: string;
     role: UserRole;
+    departmentId?: string | null;
   };
 }
 
@@ -33,7 +34,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     // Verify user exists in database
     const user = await prisma.user.findUnique({ 
         where: { id: decoded.sub },
-        select: { id: true, role: true }
+        select: { id: true, role: true, departmentId: true }
     });
 
     if (!user) {
@@ -44,6 +45,7 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     req.user = {
       id: user.id,
       role: user.role,
+      departmentId: user.departmentId,
     };
     
     next();

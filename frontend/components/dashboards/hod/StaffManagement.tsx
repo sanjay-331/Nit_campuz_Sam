@@ -2,9 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
 import { DotsHorizontalIcon, PencilIcon, PlusIcon, BookOpenIcon } from '../../icons/Icons';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectAllUsers, selectAllCourses, assignCourseRequest, createCourseRequest, fetchCoursesRequest } from '../../../store/slices/appSlice';
+import { selectAllUsers, selectAllCourses, assignCourseRequest, createCourseRequest } from '../../../store/slices/appSlice';
 import { UserRole, Staff, Course } from '../../../types';
 import { selectUser } from '../../../store/slices/authSlice';
+import { showToast } from '../../../store/slices/uiSlice';
 import Button from '../../ui/Button';
 import {
   Table,
@@ -72,17 +73,44 @@ const StaffManagement: React.FC = () => {
     }
 
     const handleCreateCourse = () => {
-        if (newCourse.name && newCourse.code && user?.departmentId) {
-            dispatch(createCourseRequest({
-                name: newCourse.name,
-                code: newCourse.code,
-                credits: newCourse.credits,
-                semester: newCourse.semester,
-                departmentId: user.departmentId,
-            }));
-            setIsCreateDialogOpen(false);
-            setNewCourse({ name: '', code: '', credits: 3, semester: 1 });
+        const normalizedName = newCourse.name.trim();
+        const normalizedCode = newCourse.code.trim().toUpperCase();
+
+        if (!user?.departmentId) {
+            dispatch(showToast({ type: 'error', message: 'Your account is not linked to a department.' }));
+            return;
         }
+
+        if (!normalizedName || !normalizedCode) {
+            dispatch(showToast({ type: 'error', message: 'Course name and code are required.' }));
+            return;
+        }
+
+        if (!Number.isInteger(newCourse.credits) || newCourse.credits < 1) {
+            dispatch(showToast({ type: 'error', message: 'Credits must be a positive whole number.' }));
+            return;
+        }
+
+        if (!Number.isInteger(newCourse.semester) || newCourse.semester < 1) {
+            dispatch(showToast({ type: 'error', message: 'Semester must be a positive whole number.' }));
+            return;
+        }
+
+        const duplicateCourse = COURSES.find(c => c.code.trim().toUpperCase() === normalizedCode);
+        if (duplicateCourse) {
+            dispatch(showToast({ type: 'error', message: 'A course with this code already exists.' }));
+            return;
+        }
+
+        dispatch(createCourseRequest({
+            name: normalizedName,
+            code: normalizedCode,
+            credits: newCourse.credits,
+            semester: newCourse.semester,
+            departmentId: user.departmentId,
+        }));
+        setIsCreateDialogOpen(false);
+        setNewCourse({ name: '', code: '', credits: 3, semester: 1 });
     }
 
     return (
@@ -139,19 +167,28 @@ const StaffManagement: React.FC = () => {
                                       <span className="px-2 py-1 text-xs font-medium rounded-md bg-green-50 text-green-700">{getAssignedCourses(staff.id)}</span>
                                     </TableCell>
                                     <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <span className="sr-only">Open menu</span>
-                                            <DotsHorizontalIcon className="h-4 w-4" />
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button
+                                                size="sm"
+                                                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                                                onClick={() => { setSelectedStaff(staff); setSelectedCourse(''); setIsAssignDialogOpen(true); }}
+                                            >
+                                                Assign Course
                                             </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => { setSelectedStaff(staff); setSelectedCourse(''); setIsAssignDialogOpen(true); }}>
-                                                <PencilIcon className="w-4 h-4 mr-2" />Assign Course
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <DotsHorizontalIcon className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => { setSelectedStaff(staff); setSelectedCourse(''); setIsAssignDialogOpen(true); }}>
+                                                        <PencilIcon className="w-4 h-4 mr-2" />Assign Course
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                                 ))}

@@ -36,7 +36,7 @@ const MaterialsManagement: React.FC = () => {
         url: '',
     });
     
-    const myCourses = useMemo(() => COURSES.filter(c => c.staffId === user?.id), [user]);
+    const myCourses = useMemo(() => COURSES.filter(c => c.staffId === user?.id), [user, COURSES]);
     const materialsForCourse = useMemo(() => {
         return materials.filter(m => m.courseId === selectedCourse);
     }, [selectedCourse, materials]);

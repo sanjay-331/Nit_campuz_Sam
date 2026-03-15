@@ -31,7 +31,9 @@ const AttendanceManagement: React.FC = () => {
     const studentsInCourse = useMemo(() => {
         if (!selectedCourse) return [];
         const course = myCourses.find(c => c.id === selectedCourse);
-        return STUDENTS.filter(s => s.departmentId === course?.departmentId);
+        if (!course) return [];
+        const targetYear = Math.floor((course.semester + 1) / 2);
+        return STUDENTS.filter(s => s.departmentId === course.departmentId && s.year === targetYear);
     }, [selectedCourse, myCourses, STUDENTS]);
 
     useEffect(() => {

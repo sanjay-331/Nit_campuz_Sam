@@ -384,6 +384,17 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
             newErrors.email = 'Please enter a valid email address.';
         }
+        if (!formData.role) {
+            newErrors.role = 'Please select a role.';
+        }
+        if (!formData.departmentId?.trim()) {
+            newErrors.departmentId = 'Please select a department.';
+        }
+        if (formData.role === UserRole.STUDENT) {
+            if (!(formData as any).regNo?.trim()) newErrors.regNo = 'Please enter a register number.';
+            if (!(formData as any).year || Number((formData as any).year) < 1) newErrors.year = 'Please enter a valid year.';
+            if (!(formData as any).section?.trim()) newErrors.section = 'Please enter a section.';
+        }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -403,6 +414,13 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
     const handleSelectChange = (key: keyof User, value: string) => {
         const processedValue = value === 'none' ? '' : value;
         setFormData(prev => ({ ...prev, [key]: processedValue }));
+        if (errors[key]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[key];
+                return newErrors;
+            });
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -542,6 +560,7 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                         <SelectTrigger id="edit-role"><SelectValue placeholder="Role" /></SelectTrigger>
                                         <SelectContent>{Object.values(UserRole).map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                                     </Select>
+                                    {errors.role && <div className="mt-1 text-xs text-red-600">{errors.role}</div>}
                                 </div>
                                 <div>
                                     <label htmlFor="edit-department" className="block text-sm font-medium text-slate-600 mb-1">Department</label>
@@ -552,6 +571,7 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                             {DEPARTMENTS.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
+                                    {errors.departmentId && <div className="mt-1 text-xs text-red-600">{errors.departmentId}</div>}
                                 </div>
                             </div>
                             {formData.role === UserRole.STUDENT && (
@@ -559,14 +579,17 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                     <div>
                                         <label htmlFor="edit-regNo" className="block text-sm font-medium text-slate-600 mb-1">Reg No</label>
                                         <Input id="edit-regNo" name="regNo" placeholder="REG-001" value={(formData as any).regNo || ''} onChange={handleChange} />
+                                        {errors.regNo && <div className="mt-1 text-xs text-red-600">{errors.regNo}</div>}
                                     </div>
                                     <div>
                                         <label htmlFor="edit-year" className="block text-sm font-medium text-slate-600 mb-1">Year</label>
                                         <Input id="edit-year" name="year" type="number" placeholder="1" value={(formData as any).year || ''} onChange={handleChange} />
+                                        {errors.year && <div className="mt-1 text-xs text-red-600">{errors.year}</div>}
                                     </div>
                                     <div>
                                         <label htmlFor="edit-section" className="block text-sm font-medium text-slate-600 mb-1">Section</label>
                                         <Input id="edit-section" name="section" placeholder="A" value={(formData as any).section || ''} onChange={handleChange} />
+                                        {errors.section && <div className="mt-1 text-xs text-red-600">{errors.section}</div>}
                                     </div>
                                 </div>
                             )}
@@ -604,10 +627,11 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                     <div className="grid grid-cols-2 gap-4 pt-2">
                                         <div>
                                             <label htmlFor="role" className="block text-sm font-medium text-slate-600 mb-1">Role</label>
-                                            <Select value={formData.role} onValueChange={(v) => handleSelectChange('role', v)}>
+                                    <Select value={formData.role} onValueChange={(v) => handleSelectChange('role', v)}>
                                                 <SelectTrigger id="role"><SelectValue placeholder="Role" /></SelectTrigger>
                                                 <SelectContent>{Object.values(UserRole).map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                                             </Select>
+                                            {errors.role && <div className="mt-1 text-xs text-red-600">{errors.role}</div>}
                                         </div>
                                         <div>
                                             <label htmlFor="department" className="block text-sm font-medium text-slate-600 mb-1">Department</label>
@@ -618,6 +642,7 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                                     {DEPARTMENTS.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
                                                 </SelectContent>
                                             </Select>
+                                            {errors.departmentId && <div className="mt-1 text-xs text-red-600">{errors.departmentId}</div>}
                                         </div>
                                     </div>
                                     {formData.role === UserRole.STUDENT && (
@@ -625,14 +650,17 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                             <div>
                                                 <label htmlFor="regNo" className="block text-sm font-medium text-slate-600 mb-1">Reg No</label>
                                                 <Input id="regNo" name="regNo" placeholder="REG-001" value={(formData as any).regNo || ''} onChange={handleChange} />
+                                                {errors.regNo && <div className="mt-1 text-xs text-red-600">{errors.regNo}</div>}
                                             </div>
                                             <div>
                                                 <label htmlFor="year" className="block text-sm font-medium text-slate-600 mb-1">Year</label>
                                                 <Input id="year" name="year" type="number" placeholder="1" value={(formData as any).year || ''} onChange={handleChange} />
+                                                {errors.year && <div className="mt-1 text-xs text-red-600">{errors.year}</div>}
                                             </div>
                                             <div>
                                                 <label htmlFor="section" className="block text-sm font-medium text-slate-600 mb-1">Section</label>
                                                 <Input id="section" name="section" placeholder="A" value={(formData as any).section || ''} onChange={handleChange} />
+                                                {errors.section && <div className="mt-1 text-xs text-red-600">{errors.section}</div>}
                                             </div>
                                         </div>
                                     )}

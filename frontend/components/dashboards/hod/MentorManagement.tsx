@@ -40,6 +40,22 @@ const MentorManagement: React.FC = () => {
         return deptStudents.filter(s => !assignedIds.has(s.id));
     }, [deptStudents, mentorAssignments]);
 
+    const mentorAssignmentsByFaculty = useMemo(() => {
+        const assignmentStudentMap = new Map(
+            mentorAssignments
+                .filter((assignment): assignment is typeof assignment & { student: Student } => !!assignment.student)
+                .map(assignment => [assignment.studentId, assignment.student])
+        );
+
+        return deptFaculty.reduce((acc, faculty) => {
+            acc[faculty.id] = mentorAssignments
+                .filter(assignment => assignment.mentorId === faculty.id)
+                .map(assignment => assignmentStudentMap.get(assignment.studentId) || allUsers.find(u => u.id === assignment.studentId) as Student | undefined)
+                .filter((student): student is Student => Boolean(student));
+            return acc;
+        }, {} as Record<string, Student[]>);
+    }, [deptFaculty, mentorAssignments, allUsers]);
+
     const unassignedByYear = useMemo(() => {
         const groups: { [key: number]: Student[] } = {};
         unassignedStudents.forEach(s => {
@@ -177,7 +193,21 @@ const MentorManagement: React.FC = () => {
                 </div>
             </div>
 
-            {unassignedStudents.length > 0 && (
+            {!departmentId && (
+                <EmptyState
+                    title="Department Not Assigned"
+                    message="This HOD account is not linked to a department yet, so mentor assignment cannot be managed."
+                />
+            )}
+
+            {departmentId && deptStudents.length === 0 && (
+                <EmptyState
+                    title="No Students Found"
+                    message="No students are currently linked to your department. Check student department assignments before assigning mentors."
+                />
+            )}
+
+            {departmentId && unassignedStudents.length > 0 && (
                 <Card className="border-indigo-100 bg-indigo-50/10 shadow-md">
                     <CardHeader className="flex flex-row items-center justify-between">
                         <div>
@@ -249,9 +279,7 @@ const MentorManagement: React.FC = () => {
                     {deptFaculty.length > 0 ? (
                         <div className="space-y-4">
                             {deptFaculty.map(faculty => {
-                                const mentees = mentorAssignments.filter(m => m.mentorId === faculty.id)
-                                    .map(m => allUsers.find(u => u.id === m.studentId) as Student)
-                                    .filter(Boolean);
+                                const mentees = mentorAssignmentsByFaculty[faculty.id] || [];
 
                                 return (
                                     <details key={faculty.id} className="p-4 border rounded-xl bg-gray-50/50 group overflow-hidden transition-all duration-300 open:bg-white open:shadow-md">

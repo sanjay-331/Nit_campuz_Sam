@@ -44,7 +44,7 @@ exports.createCourseSchema = zod_1.z.object({
     body: zod_1.z.object({
         name: zod_1.z.string().min(1, 'Course name is required'),
         code: zod_1.z.string().min(1, 'Course code is required'),
-        staffId: zod_1.z.string().min(1, 'Staff ID is required'),
+        staffId: zod_1.z.string().optional(),
         departmentId: zod_1.z.string().min(1, 'Department ID is required'),
         credits: zod_1.z.union([zod_1.z.number(), zod_1.z.string()]),
         semester: zod_1.z.union([zod_1.z.number(), zod_1.z.string()])

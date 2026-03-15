@@ -35,7 +35,7 @@ const SubmittedAssignments: React.FC = () => {
     const [viewingSubmission, setViewingSubmission] = useState<StudentSubmission | null>(null);
     const [grade, setGrade] = useState('');
 
-    const myCourses = useMemo(() => COURSES.filter(c => c.staffId === user?.id), [user]);
+    const myCourses = useMemo(() => COURSES.filter(c => c.staffId === user?.id), [user, COURSES]);
 
     const assignmentsForCourse = useMemo(() => {
         if (!selectedCourse) return [];
