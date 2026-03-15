@@ -23,8 +23,8 @@ const ELibrary: React.FC = () => {
     const [newBook, setNewBook] = useState<Omit<Book, 'id'>>({
         title: '',
         author: '',
-        bookUrl: '', // Will treat as Image link based on user's feedback
-        imageUrl: '' // Will treat as PDF link based on user's feedback
+        bookUrl: '',
+        imageUrl: ''
     });
 
     const filteredBooks = useMemo(() => {
@@ -190,12 +190,12 @@ const ELibrary: React.FC = () => {
                         >
                             <div className="aspect-[3/4] overflow-hidden relative">
                                 <a href={book.bookUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                                    <img src={book.bookUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 </a>
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end justify-between p-4">
                                     <div className="flex gap-2 pointer-events-auto">
                                         <a 
-                                            href={book.imageUrl} 
+                                            href={book.bookUrl} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             className="p-2 bg-white/20 backdrop-blur-md rounded-lg text-white hover:bg-white/40 transition-colors"

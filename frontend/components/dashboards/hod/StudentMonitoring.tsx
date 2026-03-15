@@ -34,7 +34,11 @@ const StudentMonitoring: React.FC = () => {
             .filter(s => s.departmentId === user?.departmentId)
             .map(s => s.year);
         return [...new Set(years)].sort();
-    }, [user]);
+    }, [user, STUDENTS]);
+
+    const formatCgpa = (cgpa?: number) => {
+        return Number.isFinite(cgpa) ? Number(cgpa).toFixed(2) : 'N/A';
+    };
 
     const getAttendancePercentage = (studentId: string) => {
         // Mocking this data
@@ -97,7 +101,7 @@ const StudentMonitoring: React.FC = () => {
                                               <span className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-800">{student.year}</span>
                                             </TableCell>
                                             <TableCell>
-                                              <span className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-800">{student.cgpa.toFixed(2)}</span>
+                                              <span className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-800">{formatCgpa(student.cgpa)}</span>
                                             </TableCell>
                                             <TableCell>
                                               <span className={`px-2 py-1 text-xs font-medium rounded-md bg-gray-100 ${attendance < 85 ? 'text-red-600' : 'text-gray-800'}`}>{attendance}%</span>

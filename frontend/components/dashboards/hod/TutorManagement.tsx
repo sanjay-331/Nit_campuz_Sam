@@ -28,6 +28,7 @@ const TutorManagement: React.FC = () => {
     };
     
     const getUserById = (id: string): User | undefined => allUsers.find(u => u.id === id);
+    const formatCgpa = (cgpa?: number) => Number.isFinite(cgpa) ? Number(cgpa).toFixed(2) : 'N/A';
 
     return (
         <div className="space-y-6">
@@ -55,7 +56,7 @@ const TutorManagement: React.FC = () => {
                                     return (
                                         <div key={app.id} className="p-4 border rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4">
                                             <div className="flex-1">
-                                                <p className="font-semibold">{student?.name} (CGPA: {student?.cgpa.toFixed(2)})</p>
+                                                <p className="font-semibold">{student?.name} (CGPA: {formatCgpa(student?.cgpa)})</p>
                                                 <p className="text-sm text-gray-600 my-1">Wants to tutor: <span className="font-medium">{app.subjects.join(', ')}</span></p>
                                                 <p className="text-xs text-gray-500 italic">"{app.statement}"</p>
                                             </div>

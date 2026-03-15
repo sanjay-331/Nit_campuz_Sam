@@ -52,15 +52,15 @@ const HodHome: React.FC = () => {
     const avgAttendance = analytics?.overview?.attendancePercentage ? `${analytics.overview.attendancePercentage}%` : "92%";
     
     const avgCgpa = deptStudents.length > 0 
-        ? (deptStudents.reduce((acc, s) => acc + s.cgpa, 0) / deptStudents.length).toFixed(2)
+        ? (deptStudents.reduce((acc, s) => acc + (Number.isFinite(s.cgpa) ? s.cgpa : 0), 0) / deptStudents.length).toFixed(2)
         : 'N/A';
 
     const studentPerformanceData = analytics?.studentDistribution 
         ? analytics.studentDistribution 
         : [...deptStudents]
-            .sort((a,b) => b.cgpa - a.cgpa)
+            .sort((a,b) => (Number.isFinite(b.cgpa) ? b.cgpa : 0) - (Number.isFinite(a.cgpa) ? a.cgpa : 0))
             .slice(0, 5)
-            .map(s => ({ name: s.name.split(' ')[0], cgpa: s.cgpa }));
+            .map(s => ({ name: s.name.split(' ')[0], cgpa: Number.isFinite(s.cgpa) ? s.cgpa : 0 }));
 
   return (
     <div className="space-y-6">

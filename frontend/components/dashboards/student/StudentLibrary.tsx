@@ -56,11 +56,11 @@ const StudentLibrary: React.FC = () => {
                         >
                             <div className="aspect-[3/4] overflow-hidden relative">
                                 <a href={book.bookUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                                    <img src={book.bookUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                 </a>
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
                                     <a 
-                                        href={book.imageUrl} 
+                                        href={book.bookUrl} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
                                         className="p-3 bg-white rounded-full text-indigo-600 shadow-xl hover:scale-110 transition-transform pointer-events-auto"
