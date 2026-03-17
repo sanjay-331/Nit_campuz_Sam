@@ -94,7 +94,7 @@ const AIChatbot: React.FC = () => {
 
         try {
             // Retrieve the JWT from localStorage (same way the rest of the app uses it)
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('lms_token');
 
             const response = await fetch(`${BASE_URL}/api/chat`, {
                 method: 'POST',
