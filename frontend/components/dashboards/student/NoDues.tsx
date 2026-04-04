@@ -7,6 +7,7 @@ import { selectUser } from '../../../store/slices/authSlice';
 import { selectAllNoDuesCertificates, issueNoDuesCertificateRequest } from '../../../store/slices/appSlice';
 import { Student } from '../../../types';
 import { CheckCircleIcon, XIcon, ShieldCheckIcon } from '../../icons/Icons';
+import { BASE_URL } from '../../../lib/config';
 
 const NoDues: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -14,8 +15,7 @@ const NoDues: React.FC = () => {
     const allCertificates = useSelector(selectAllNoDuesCertificates);
 
     const myCertificate = useMemo(() => {
-        if (!user) return null;
-        return allCertificates.find(c => c.studentId === user.id);
+        return allCertificates.find(c => c.userId === user.id);
     }, [user, allCertificates]);
 
     if (!user) return null;
@@ -28,7 +28,7 @@ const NoDues: React.FC = () => {
 
     const handleDownload = () => {
         const token = localStorage.getItem('lms_token');
-        const url = `https://nitcampuz-production.up.railway.app/api/academic/report/no-dues/${user.id}`; // Fixed production URL
+        const url = `${BASE_URL}/api/academic/report/no-dues/${user.id}`;
         
         // Use fetch to download the file with authorization
         fetch(url, {

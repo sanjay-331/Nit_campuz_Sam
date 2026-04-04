@@ -93,18 +93,7 @@ import { DashboardAnalytics, StudentDocument } from '../../types';
 import { selectUser } from '../slices/authSlice';
 import { showToast } from '../slices/uiSlice';
 
-const getBaseUrl = () => {
-    if (import.meta.env.VITE_BASE_URL) return import.meta.env.VITE_BASE_URL;
-    if (typeof window !== 'undefined') {
-        const hostname = window.location.hostname;
-        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
-            return 'http://localhost:5000';
-        }
-    }
-    return 'https://nitcampuz-production.up.railway.app';
-};
-
-const BASE_URL = getBaseUrl();
+import { BASE_URL } from '../../lib/config';
 
 // --- HELPER FUNCTIONS ---
 function generateId(prefix: string): string {

@@ -5,7 +5,9 @@ import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
 import { showToast } from '../store/slices/uiSlice';
 import { addNotification } from '../store/slices/appSlice';
 
-const SOCKET_URL = 'https://nitcampuz-production.up.railway.app'; // Fixed production URL
+import { BASE_URL } from '../lib/config';
+
+const SOCKET_URL = BASE_URL;
 
 let socket: Socket | null = null;
 
