@@ -6,8 +6,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Use the adapter-pg pattern as required by your project's prisma version
 const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
+const pool = new Pool({ 
+  connectionString,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
@@ -23,115 +29,69 @@ async function main() {
     create: { name: 'Computer Science and Engineering' },
   });
 
-  const eceDept = await prisma.department.upsert({
-    where: { name: 'Electronics and Communication Engineering' },
-    update: {},
-    create: { name: 'Electronics and Communication Engineering' },
-  });
+  console.log('Department created.');
 
   // 2. Create Admin User
-  await prisma.user.upsert({
-    where: { email: 'admin@nitcampuz.edu' },
-    update: {},
-    create: {
-      name: 'System Admin',
-      email: 'admin@nitcampuz.edu',
-      password: passwordHash,
-      role: UserRole.ADMIN,
-      status: StudentStatus.ACTIVE,
-    }
-  });
+  const adminEmail = 'admin@nitcampuz.edu';
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  
+  if (!existingAdmin) {
+    await prisma.user.create({
+      data: {
+        name: 'System Admin',
+        email: adminEmail,
+        password: passwordHash,
+        role: UserRole.ADMIN,
+        status: StudentStatus.ACTIVE,
+        permissions: [],
+      }
+    });
+    console.log('Admin user created.');
+  } else {
+    console.log('Admin user already exists.');
+  }
 
   // 3. Create Principal User
-  await prisma.user.upsert({
-    where: { email: 'principal@nitcampuz.edu' },
-    update: {},
-    create: {
-      name: 'Dr. Principal',
-      email: 'principal@nitcampuz.edu',
-      password: passwordHash,
-      role: UserRole.PRINCIPAL,
-      status: StudentStatus.ACTIVE,
-    }
-  });
+  const principalEmail = 'principal@nitcampuz.edu';
+  const existingPrincipal = await prisma.user.findUnique({ where: { email: principalEmail } });
+  if (!existingPrincipal) {
+    await prisma.user.create({
+      data: {
+        name: 'Dr. Principal',
+        email: principalEmail,
+        password: passwordHash,
+        role: UserRole.PRINCIPAL,
+        status: StudentStatus.ACTIVE,
+        permissions: [],
+      }
+    });
+  }
 
-  // 4. Create HOD User
-  await prisma.user.upsert({
-    where: { email: 'hod.cse@nitcampuz.edu' },
-    update: {},
-    create: {
-      name: 'Dr. CSE HOD',
-      email: 'hod.cse@nitcampuz.edu',
-      password: passwordHash,
-      role: UserRole.HOD,
-      departmentId: cseDept.id,
-      status: StudentStatus.ACTIVE,
-    }
-  });
-
-  // 5. Create Staff User
-  const staff = await prisma.user.upsert({
-    where: { email: 'sarah.w@nitcampuz.edu' },
-    update: {},
-    create: {
-      name: 'Prof. Staff Member',
-      email: 'sarah.w@nitcampuz.edu',
-      password: passwordHash,
-      role: UserRole.STAFF,
-      departmentId: cseDept.id,
-      status: StudentStatus.ACTIVE,
-    }
-  });
-
-  // 6. Create Student User
-  await prisma.user.upsert({
-    where: { email: 'alex.j@nitcampuz.edu' },
-    update: {},
-    create: {
-      name: 'Test Student',
-      email: 'alex.j@nitcampuz.edu',
-      password: passwordHash,
-      role: UserRole.STUDENT,
-      departmentId: cseDept.id,
-      status: StudentStatus.ACTIVE,
-      studentProfile: {
-        create: {
-          regNo: 'REG12346',
-          section: 'A',
-          admissionYear: 2024,
-          year: 2,
-          cgpa: 8.5,
+  // 4. Create Student User
+  const studentEmail = 'alex.j@nitcampuz.edu';
+  const existingStudent = await prisma.user.findUnique({ where: { email: studentEmail } });
+  if (!existingStudent) {
+    await prisma.user.create({
+      data: {
+        name: 'Test Student',
+        email: studentEmail,
+        password: passwordHash,
+        role: UserRole.STUDENT,
+        departmentId: cseDept.id,
+        status: StudentStatus.ACTIVE,
+        permissions: [],
+        studentProfile: {
+          create: {
+            regNo: 'REG12346',
+            section: 'A',
+            admissionYear: 2024,
+            year: 2,
+            cgpa: 8.5,
+          }
         }
       }
-    }
-  });
-
-  // 7. Create Exam Cell User
-  await prisma.user.upsert({
-    where: { email: 'examcell@nitcampuz.edu' },
-    update: {},
-    create: {
-      name: 'Exam Cell Controller',
-      email: 'examcell@nitcampuz.edu',
-      password: passwordHash,
-      role: UserRole.EXAM_CELL,
-      status: StudentStatus.ACTIVE,
-    }
-  });
-
-  // 8. Create Course
-  await prisma.course.upsert({
-    where: { code: 'CS101' },
-    update: {},
-    create: {
-      name: 'Introduction to Computer Science',
-      code: 'CS101',
-      credits: 3,
-      semester: 1,
-      staffId: staff.id,
-      departmentId: cseDept.id,
-    }
-  });
+    });
+  }
 
   console.log('Database seeded successfully!');
 }
@@ -143,4 +103,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
