@@ -131,9 +131,6 @@ export const getDuesAndCertificates = async (req: Request, res: Response): Promi
     try {
         const dues = await prisma.dues.findMany();
         const certificates = await prisma.noDuesCertificate.findMany();
-        // Since frontend mock just held certificates, returning both or treating separately.
-        // The mock actually didn't store dues globally, dues were embedded on User objects!
-        // But for certificates, frontend stores NO_DUES_CERTIFICATES.
         res.json({ certificates, dues });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error' });
@@ -142,12 +139,12 @@ export const getDuesAndCertificates = async (req: Request, res: Response): Promi
 
 export const updateDuesStatus = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { studentId, dueType, status } = req.body;
+        const { userId, dueType, status } = req.body;
         
-        // Ensure student exists
-        const student = await prisma.user.findUnique({ where: { id: studentId } });
-        if (!student) {
-            res.status(404).json({ message: 'Student not found' });
+        // Ensure user exists
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
             return;
         }
 
@@ -155,10 +152,10 @@ export const updateDuesStatus = async (req: Request, res: Response): Promise<voi
         updateData[dueType] = status;
 
         const updatedDues = await prisma.dues.upsert({
-            where: { studentId },
+            where: { userId },
             update: updateData,
             create: {
-                studentId,
+                userId,
                 ...updateData
             }
         });
@@ -171,16 +168,16 @@ export const updateDuesStatus = async (req: Request, res: Response): Promise<voi
 
 export const issueNoDuesCertificate = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { studentId } = req.body;
+        const { userId } = req.body;
 
-        const dues = await prisma.dues.findUnique({ where: { studentId } });
+        const dues = await prisma.dues.findUnique({ where: { userId } });
         
         if (!dues || !dues.library || !dues.department || !dues.accounts) {
             res.status(400).json({ message: 'All dues must be cleared first.' });
             return;
         }
 
-        const existingCert = await prisma.noDuesCertificate.findFirst({ where: { studentId } });
+        const existingCert = await prisma.noDuesCertificate.findFirst({ where: { userId } });
         let cert;
 
         if (existingCert) {
@@ -191,7 +188,7 @@ export const issueNoDuesCertificate = async (req: Request, res: Response): Promi
         } else {
             cert = await prisma.noDuesCertificate.create({
                 data: {
-                    studentId,
+                    userId,
                     status: 'Issued',
                     issuedAt: new Date()
                 }

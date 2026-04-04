@@ -14,6 +14,8 @@ import ClassAdvisorView from './staff/ClassAdvisorView.tsx';
 import MyMenteesView from './staff/MyMenteesView.tsx';
 import OnDuty from './student/OnDuty';
 import ODApprovals from './staff/ODApprovals';
+import DiscussionForum from './faculty/DiscussionForum.tsx';
+import FacultyPerformance from './faculty/FacultyPerformance.tsx';
 
 
 const pageVariants = {
@@ -53,6 +55,8 @@ const StaffDashboard: React.FC = () => {
             <Route path="/library" element={<AnimatedPage><ELibrary /></AnimatedPage>} />
             <Route path="/class-advisor" element={<AnimatedPage><ClassAdvisorView /></AnimatedPage>} />
             <Route path="/mentees" element={<AnimatedPage><MyMenteesView /></AnimatedPage>} />
+            <Route path="/forum" element={<AnimatedPage><DiscussionForum /></AnimatedPage>} />
+            <Route path="/performance" element={<AnimatedPage><FacultyPerformance /></AnimatedPage>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );

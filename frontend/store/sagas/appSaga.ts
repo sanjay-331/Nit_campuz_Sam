@@ -85,6 +85,9 @@ import {
     setBooks,
     addBookRequest,
     deleteBookRequest,
+    fetchDiscussionsRequest,
+    setDiscussions,
+    createDiscussionRequest,
 } from '../slices/appSlice';
 import { DashboardAnalytics, StudentDocument } from '../../types';
 import { selectUser } from '../slices/authSlice';
@@ -1691,6 +1694,54 @@ function* handleDeleteBook(action: PayloadAction<string>) {
     }
 }
 
+function* handleFetchDiscussions() {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        if (!token) return;
+
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/discussions`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const data: any[] = yield sagaEffects.call([response, 'json']);
+            yield sagaEffects.put(setDiscussions(data));
+        } else {
+            console.error('Failed to fetch discussions');
+        }
+    } catch (error) {
+        console.error('Error fetching discussions:', error);
+    }
+}
+
+function* handleCreateDiscussion(action: PayloadAction<{ title: string; content: string }>) {
+    try {
+        const token: string | null = yield sagaEffects.call([localStorage, 'getItem'], 'lms_token');
+        const response: Response = yield sagaEffects.call(fetch, `${BASE_URL}/api/discussions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(action.payload),
+        });
+
+        if (response.ok) {
+            yield sagaEffects.put(showToast({ type: 'success', message: 'Discussion created successfully.' }));
+            yield sagaEffects.put(fetchDiscussionsRequest());
+        } else {
+            const errorData: { message: string } = yield sagaEffects.call([response, 'json']);
+            throw new Error(errorData.message || 'Failed to create discussion.');
+        }
+    } catch (error) {
+        if (error instanceof Error) {
+            yield sagaEffects.put(showToast({ type: 'error', message: error.message }));
+        } else {
+            yield sagaEffects.put(showToast({ type: 'error', message: 'Failed to create discussion.' }));
+        }
+    }
+}
+
 
 // --- WATCHER SAGA ---
 
@@ -1736,6 +1787,10 @@ function* appSaga() {
   yield sagaEffects.takeLatest(fetchBooksRequest.type, handleFetchBooks);
   yield sagaEffects.takeLatest(addBookRequest.type, handleAddBook);
   yield sagaEffects.takeLatest(deleteBookRequest.type, handleDeleteBook);
+
+  // Discussion Actions
+  yield sagaEffects.takeLatest(fetchDiscussionsRequest.type, handleFetchDiscussions);
+  yield sagaEffects.takeLatest(createDiscussionRequest.type, handleCreateDiscussion);
   
   // Document Actions
   yield sagaEffects.takeLatest(uploadDocumentRequest.type, handleUploadDocument);

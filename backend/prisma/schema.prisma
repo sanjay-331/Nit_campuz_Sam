@@ -29,6 +29,9 @@ enum StudentStatus {
   ACTIVE
   ALUMNI
   INACTIVE
+  PASSED_OUT
+  TRANSFERRED
+  PROMOTED
 }
 
 model User {
@@ -43,6 +46,8 @@ model User {
   address      String?
   photoUrl     String?
   permissions  String[]
+  dateJoined   DateTime?     @default(now())
+  designation  String?
 
   studentProfile StudentProfile?
   alumniProfile  AlumniProfile?
@@ -55,6 +60,19 @@ model User {
   mentorAssignment MentorAssignment?  @relation("StudentToMentor")
   remarksGiven     Remark[]           @relation("MentorRemarks")
   remarksReceived  Remark[]           @relation("StudentRemarks")
+  
+  discussions      Discussion[]
+  dues             Dues?
+  noDues           NoDuesCertificate[]
+}
+
+model Discussion {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
 }
 
 model StudentProfile {
@@ -67,7 +85,7 @@ model StudentProfile {
   year          Int
   cgpa          Float   @default(0.0)
 
-  // Dues
+  // Dues (legacy, keep for compatibility if needed, but we use Dues model)
   libraryDue    Boolean @default(false)
   departmentDue Boolean @default(false)
   accountsDue   Boolean @default(false)
@@ -259,14 +277,16 @@ model ExamSchedule {
 
 model NoDuesCertificate {
   id        String    @id @default(uuid())
-  studentId String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
   status    String    @default("Requested")
   issuedAt  DateTime?
 }
 
 model Dues {
   id         String  @id @default(uuid())
-  studentId  String  @unique
+  userId     String  @unique
+  user       User    @relation(fields: [userId], references: [id])
   library    Boolean @default(false)
   department Boolean @default(false)
   accounts   Boolean @default(false)
@@ -294,3 +314,4 @@ model Book {
   imageUrl  String
   createdAt DateTime @default(now())
 }
+

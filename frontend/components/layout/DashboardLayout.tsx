@@ -56,6 +56,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 {children}
               </motion.div>
             </div>
+            
+            <footer className="mt-8 border-t border-slate-200 pt-6 pb-2 text-center">
+              <p className="text-sm font-medium text-slate-500 flex items-center justify-center gap-2">
+                <span className="h-px w-8 bg-slate-300"></span>
+                Developed by <span className="text-indigo-600 font-bold uppercase tracking-tight">CSE Department</span>
+                <span className="h-px w-8 bg-slate-300"></span>
+              </p>
+            </footer>
         </main>
         <BottomNavBar />
       </div>

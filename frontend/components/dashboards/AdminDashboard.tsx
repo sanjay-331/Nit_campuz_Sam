@@ -14,6 +14,9 @@ import PermissionsPage from '../../pages/Permissions';
 import AttendanceAnalytics from './admin/AttendanceAnalytics.tsx';
 import PromoteStudents from './admin/PromoteStudents.tsx';
 import DocumentVerification from './admin/DocumentVerification.tsx';
+import CourseManagement from './admin/CourseManagement.tsx';
+import PassedOutStudents from './admin/PassedOutStudents.tsx';
+import DuesManagement from './admin/DuesManagement.tsx';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -49,6 +52,9 @@ const AdminDashboard: React.FC = () => {
             <Route path="/promote" element={<AnimatedPage><PromoteStudents /></AnimatedPage>} />
             <Route path="/attendance-analytics" element={<AnimatedPage><AttendanceAnalytics /></AnimatedPage>} />
             <Route path="/verifications" element={<AnimatedPage><DocumentVerification /></AnimatedPage>} />
+            <Route path="/courses" element={<AnimatedPage><CourseManagement /></AnimatedPage>} />
+            <Route path="/passed-out" element={<AnimatedPage><PassedOutStudents /></AnimatedPage>} />
+            <Route path="/dues" element={<AnimatedPage><DuesManagement /></AnimatedPage>} />
             <Route path="/logs" element={<AnimatedPage><ActivityLogs /></AnimatedPage>} />
             <Route path="/permissions" element={<AnimatedPage><PermissionsPage /></AnimatedPage>} />
             <Route path="*" element={<Navigate to="/" replace />} />

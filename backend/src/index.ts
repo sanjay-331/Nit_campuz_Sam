@@ -14,6 +14,8 @@ import adminRoutes from './routes/admin.routes';
 import documentRoutes from './routes/document.routes';
 import libraryRoutes from './routes/library.routes';
 import chatRoutes from './routes/chat.routes';
+import facultyRoutes from './routes/faculty.routes';
+import discussionRoutes from './routes/discussion.routes';
 import { errorHandler } from './middleware/error';
 
 dotenv.config();
@@ -70,6 +72,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/faculty', facultyRoutes);
+app.use('/api/discussions', discussionRoutes);
 
 // Basic healthcheck route
 app.get('/api/health', (req: express.Request, res: express.Response) => {

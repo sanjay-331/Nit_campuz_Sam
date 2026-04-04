@@ -14,6 +14,8 @@ import ODApprovals from './staff/ODApprovals';
 import OnDuty from './student/OnDuty';
 import PromoteStudents from './admin/PromoteStudents';
 import DocumentVerification from './admin/DocumentVerification';
+import DiscussionForum from './faculty/DiscussionForum.tsx';
+import FacultyPerformance from './faculty/FacultyPerformance.tsx';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -55,6 +57,8 @@ const HodDashboard: React.FC = () => {
             <Route path="/approvals" element={<AnimatedPage><ODApprovals /></AnimatedPage>} />
             <Route path="/verifications" element={<AnimatedPage><DocumentVerification /></AnimatedPage>} />
             <Route path="/marks-verification" element={<AnimatedPage><MarksVerification /></AnimatedPage>} />
+            <Route path="/forum" element={<AnimatedPage><DiscussionForum /></AnimatedPage>} />
+            <Route path="/performance" element={<AnimatedPage><FacultyPerformance /></AnimatedPage>} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );

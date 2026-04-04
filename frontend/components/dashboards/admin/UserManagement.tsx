@@ -144,6 +144,7 @@ const UserManagement: React.FC = () => {
                   <TableHead className="hidden md:table-cell">Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead className="hidden lg:table-cell">Department</TableHead>
+                  <TableHead className="hidden xl:table-cell">Joined On</TableHead>
                   <TableHead>Status</TableHead>
                   {canManageUsers && <TableHead><span className="sr-only">Actions</span></TableHead>}
                 </TableRow>
@@ -173,11 +174,16 @@ const UserManagement: React.FC = () => {
                     <TableCell>
                       <span className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-800">{user.role}</span>
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <span className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-800">{DEPARTMENTS.find(d => d.id === user.departmentId)?.name || 'N/A'}</span>
+                    <TableCell className="hidden xl:table-cell">
+                      <span className="text-xs text-slate-500">{user.dateJoined ? new Date(user.dateJoined).toLocaleDateString() : 'N/A'}</span>
                     </TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-md ${user.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-800'}`}>{user.status}</span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-md ${
+                        user.status === StudentStatus.ACTIVE ? 'bg-green-100 text-green-800' : 
+                        user.status === StudentStatus.ALUMNI ? 'bg-indigo-100 text-indigo-800' :
+                        user.status === StudentStatus.PASSED_OUT ? 'bg-slate-100 text-slate-800' :
+                        'bg-gray-200 text-gray-800'
+                      }`}>{user.status}</span>
                     </TableCell>
                     {canManageUsers && (
                       <TableCell>
@@ -368,7 +374,8 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                 setFormData(initialData);
             } else {
                 setFormData({
-                    name: '', email: '', role: UserRole.STUDENT, departmentId: '', status: StudentStatus.ACTIVE
+                    name: '', email: '', role: UserRole.STUDENT, departmentId: '', status: StudentStatus.ACTIVE,
+                    dateJoined: new Date().toISOString().split('T')[0], designation: ''
                 });
             }
             setErrors({});
@@ -555,6 +562,16 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                             </div>
                             <div className="grid grid-cols-2 gap-4 pt-2">
                                 <div>
+                                    <label htmlFor="edit-dateJoined" className="block text-sm font-medium text-slate-600 mb-1">Date Joined</label>
+                                    <Input id="edit-dateJoined" name="dateJoined" type="date" value={formData.dateJoined ? new Date(formData.dateJoined).toISOString().split('T')[0] : ''} onChange={handleChange} />
+                                </div>
+                                <div>
+                                    <label htmlFor="edit-designation" className="block text-sm font-medium text-slate-600 mb-1">Designation</label>
+                                    <Input id="edit-designation" name="designation" placeholder="e.g. Assistant Professor" value={formData.designation || ''} onChange={handleChange} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 pt-2">
+                                <div>
                                     <label htmlFor="edit-role" className="block text-sm font-medium text-slate-600 mb-1">Role</label>
                                     <Select value={formData.role} onValueChange={(v) => handleSelectChange('role', v)}>
                                         <SelectTrigger id="edit-role"><SelectValue placeholder="Role" /></SelectTrigger>
@@ -622,6 +639,16 @@ const UserModal: React.FC<{ isOpen: boolean, onClose: () => void, user: User | n
                                             <MailIcon className="w-5 h-5 text-slate-400 absolute top-1/2 left-3 -translate-y-1/2" />
                                             <Input id="email" name="email" type="email" placeholder="e.g. john.doe@lms.com" value={formData.email || ''} onChange={handleChange} className="pl-10" />
                                             {errors.email && <ValidationTooltip message={errors.email} />}
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                        <div>
+                                            <label htmlFor="dateJoined" className="block text-sm font-medium text-slate-600 mb-1">Date Joined</label>
+                                            <Input id="dateJoined" name="dateJoined" type="date" value={formData.dateJoined} onChange={handleChange} />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="designation" className="block text-sm font-medium text-slate-600 mb-1">Designation</label>
+                                            <Input id="designation" name="designation" placeholder="Designation" value={formData.designation} onChange={handleChange} />
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 pt-2">

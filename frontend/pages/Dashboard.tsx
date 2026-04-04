@@ -21,6 +21,7 @@ import ProfilePage from './Profile.tsx';
 import PermissionsPage from './Permissions.tsx';
 import UserProfilePage from './UserProfile.tsx';
 import HelpPage from './Help.tsx';
+import DiscussionsPage from './Discussions.tsx';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -136,6 +137,7 @@ const DashboardPage: React.FC = () => {
         <Route path="/profile/:userId" element={<AnimatedPage><UserProfilePage /></AnimatedPage>} />
         <Route path="/permissions" element={<AnimatedPage><PermissionsPage /></AnimatedPage>} />
         <Route path="/help" element={<AnimatedPage><HelpPage /></AnimatedPage>} />
+        <Route path="/discussions" element={<AnimatedPage><DiscussionsPage /></AnimatedPage>} />
         <Route path="/*" element={renderDashboard()} />
       </Routes>
       <AIChatbot />

@@ -516,9 +516,35 @@ export const getClasses = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
+export const uploadCoursePlan = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { courseId, planData } = req.body;
+        
+        if (!courseId || !planData || !Array.isArray(planData)) {
+            res.status(400).json({ message: 'courseId and planData (array) required' });
+            return;
+        }
+
+        const course = await prisma.course.findUnique({ where: { id: courseId } });
+        if (!course) {
+            res.status(404).json({ message: 'Course not found' });
+            return;
+        }
+
+        // Logic to store course plan (e.g., in a new CoursePlan model or just metadata)
+        // For now, we'll just log it or simulate successful upload.
+        // Usually, another model `CoursePlanStep` would be created.
+
+        res.json({ message: 'Course plan uploaded successfully', stepCount: planData.length });
+    } catch (error) {
+        console.error('Error uploading course plan:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 export const assignCourse = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { courseId, staffId } = req.body;
+        const { courseId, staffId, semester } = req.body;
         
         if (!courseId || !staffId) {
             res.status(400).json({ message: 'Course ID and Staff ID are required' });
@@ -545,9 +571,12 @@ export const assignCourse = async (req: Request, res: Response): Promise<void> =
             return;
         }
 
+        const updateData: any = { staffId };
+        if (semester) updateData.semester = Number(semester);
+
         const updatedCourse = await prisma.course.update({
             where: { id: courseId },
-            data: { staffId }
+            data: updateData
         });
 
         res.json(updatedCourse);

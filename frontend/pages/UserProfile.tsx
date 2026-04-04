@@ -65,7 +65,8 @@ const StudentProfile: React.FC<{ student: Student }> = ({ student }) => {
                     <div className="text-center">
                         <h2 className="text-2xl font-bold text-slate-800">{student.name}</h2>
                         <p className="text-slate-500">Roll No: {student.email.split('@')[0].toUpperCase()}</p>
-                        <p className="text-xs text-slate-400">Reg No: {student.id}</p>
+                        <p className="text-xs text-slate-400">Reg No: {student.regNo || 'N/A'}</p>
+                        <p className="text-xs text-slate-400">Section: {student.section || 'A'}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -171,11 +172,10 @@ const StaffProfile: React.FC<{ staff: Staff }> = ({ staff }) => {
         <div className="space-y-6">
             <Card>
                 <CardContent className="pt-6">
-                    <div className="text-center">
                         <h2 className="text-2xl font-bold text-slate-800">{staff.name}</h2>
-                        <p className="text-slate-500">{staff.role}</p>
+                        <p className="text-indigo-600 font-bold tracking-tight uppercase">{staff.designation || staff.role}</p>
+                        <p className="text-xs text-slate-400 mt-1">Joined {staff.dateJoined ? new Date(staff.dateJoined).toLocaleDateString() : 'N/A'}</p>
                         <p className="text-xs text-slate-400">Employee ID: {staff.id}</p>
-                    </div>
                 </CardContent>
             </Card>
             

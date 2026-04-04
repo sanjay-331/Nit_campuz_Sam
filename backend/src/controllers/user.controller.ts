@@ -133,8 +133,8 @@ export const promoteClass = async (req: Request, res: Response): Promise<void> =
         // Increase Year by 1
         await prisma.studentProfile.updateMany({
              where: {
-                  year: Number(year),
-                  user: { departmentId: departmentId, status: StudentStatus.ACTIVE }
+                   year: Number(year),
+                   user: { departmentId: departmentId, status: StudentStatus.ACTIVE }
              },
              data: {
                  year: Number(year) + 1
@@ -211,6 +211,8 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
         role: prismaRole,
         departmentId: normalizedDepartmentId,
         status: prismaStatus,
+        dateJoined: req.body.dateJoined ? new Date(req.body.dateJoined) : new Date(),
+        designation: req.body.designation || null,
         permissions: [] 
       }
     });
@@ -226,17 +228,17 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
            cgpa: 0.0
          }
        });
-       
-       // Also create Dues record
-       await prisma.dues.create({
-          data: {
-            studentId: newUser.id,
-            library: false,
-            department: false,
-            accounts: false
-          }
-       });
     }
+    
+    // Create Dues record for all roles (Students and Faculty)
+    await prisma.dues.create({
+      data: {
+        userId: newUser.id,
+        library: false,
+        department: false,
+        accounts: false
+      }
+    });
 
     res.status(201).json(newUser);
   } catch (error) {
@@ -273,6 +275,8 @@ export const bulkCreateUsers = async (req: Request, res: Response): Promise<void
           role: prismaRole,
           departmentId: departmentId && departmentId !== '' ? departmentId : null,
           status: prismaStatus,
+          dateJoined: data.dateJoined ? new Date(data.dateJoined) : new Date(),
+          designation: data.designation || null,
           permissions: []
         }
       });
@@ -288,16 +292,16 @@ export const bulkCreateUsers = async (req: Request, res: Response): Promise<void
             cgpa: 0.0
           }
         });
-        
-        await prisma.dues.create({
-          data: {
-            studentId: newUser.id,
-            library: false,
-            department: false,
-            accounts: false
-          }
-        });
       }
+      
+      await prisma.dues.create({
+        data: {
+          userId: newUser.id,
+          library: false,
+          department: false,
+          accounts: false
+        }
+      });
       createdUsers.push(newUser);
     }
 
@@ -311,7 +315,7 @@ export const bulkCreateUsers = async (req: Request, res: Response): Promise<void
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params as { id: string };
-    const { name, email, role, departmentId, status, regNo, year, section } = req.body;
+    const { name, email, role, departmentId, status, regNo, year, section, dateJoined, designation } = req.body;
 
     const prismaRole = role ? (role as string).toUpperCase() as UserRole : undefined;
     const prismaStatus = status ? (status as string).toUpperCase() as StudentStatus : undefined;
@@ -323,7 +327,9 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         email,
         role: prismaRole,
         departmentId: departmentId && departmentId !== '' ? departmentId : (departmentId === '' ? null : undefined),
-        status: prismaStatus
+        status: prismaStatus,
+        dateJoined: dateJoined ? new Date(dateJoined) : undefined,
+        designation: designation
       }
     });
 
@@ -359,8 +365,8 @@ export const removeUser = async (req: Request, res: Response): Promise<void> => 
         // Delete related profiles first
         await prisma.studentProfile.deleteMany({ where: { userId: id } });
         await prisma.alumniProfile.deleteMany({ where: { userId: id } });
-        await prisma.dues.deleteMany({ where: { studentId: id } });
-        await prisma.noDuesCertificate.deleteMany({ where: { studentId: id } });
+        await prisma.dues.deleteMany({ where: { userId: id } });
+        await prisma.noDuesCertificate.deleteMany({ where: { userId: id } });
         
         await prisma.user.delete({ where: { id } });
         res.json({ message: 'User deleted successfully' });

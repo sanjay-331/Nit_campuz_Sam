@@ -14,6 +14,9 @@ export enum StudentStatus {
     ACTIVE = 'Active',
     ALUMNI = 'Alumni',
     INACTIVE = 'Inactive',
+    PASSED_OUT = 'Passed Out',
+    TRANSFERRED = 'Transferred',
+    PROMOTED = 'Promoted',
 }
 
 export enum MarkStatus {
@@ -66,6 +69,8 @@ export interface User {
       department: boolean;
       accounts: boolean;
   };
+  dateJoined?: string;
+  designation?: string;
 }
 
 export interface Department {
@@ -120,7 +125,7 @@ export interface Student extends User {
     year: number;
     cgpa: number;
     sgpa: { semester: number, gpa: number }[];
-    status: StudentStatus.ACTIVE | StudentStatus.INACTIVE;
+    status: StudentStatus;
     totalWorkingDays?: number;
     daysPresent?: number;
     dues: {
@@ -292,7 +297,7 @@ export interface OnDutyApplication {
 
 export interface NoDuesCertificate {
     id: string;
-    studentId: string;
+    userId: string;
     status: 'Requested' | 'Issued';
     issuedAt?: string;
 }

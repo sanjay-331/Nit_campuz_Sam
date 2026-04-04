@@ -27,6 +27,8 @@ export interface AppState {
     studentDocuments: StudentDocument[];
     pendingDocuments: StudentDocument[];
     books: Book[];
+    discussions: any[];
+    facultyPerformance: any | null;
 }
 
 const initialState: AppState = {
@@ -53,6 +55,8 @@ const initialState: AppState = {
     studentDocuments: [],
     pendingDocuments: [],
     books: D.BOOKS,
+    discussions: [],
+    facultyPerformance: null,
 };
 
 const appSlice = createSlice({
@@ -84,6 +88,8 @@ const appSlice = createSlice({
         assignHODRequest: (state, action: PayloadAction<{ deptId: string; staffId: string } | { deptId: string; newUser: { name: string; email: string; contact?: string } }>) => {},
         assignAdvisorRequest: (state, action: PayloadAction<{ departmentId: string; year: number; advisorId: string }>) => {},
         assignCourseRequest: (state, action: PayloadAction<{ courseId: string; staffId: string }>) => {},
+        addCourseRequest: (state, action: PayloadAction<{ name: string; code: string; departmentId: string; credits: number; semester: number; staffId?: string }>) => {},
+        bulkAddCoursesRequest: (state, action: PayloadAction<any[]>) => {},
         createCourseRequest: (state, action: PayloadAction<{ name: string; code: string; departmentId: string; credits: number; semester: number; staffId?: string }>) => {},
         fetchClassesRequest: (state) => {},
         fetchCoursesRequest: (state) => {},
@@ -175,7 +181,7 @@ const appSlice = createSlice({
 
         // FIX: Added actions for Dues Management and No Dues Certificates.
         // Dues Actions
-        updateDuesStatusRequest: (state, action: PayloadAction<{ studentId: string, dueType: 'library' | 'department' | 'accounts', status: boolean }>) => {},
+        updateDuesStatusRequest: (state, action: PayloadAction<{ userId: string, dueType: 'library' | 'department' | 'accounts', status: boolean }>) => {},
         issueNoDuesCertificateRequest: (state, action: PayloadAction<string>) => {},
         fetchNoDuesCertificatesRequest: (state) => {},
         setNoDuesCertificates: (state, action: PayloadAction<NoDuesCertificate[]>) => {
@@ -218,6 +224,19 @@ const appSlice = createSlice({
         },
         addBookRequest: (state, action: PayloadAction<Omit<Book, 'id'>>) => {},
         deleteBookRequest: (state, action: PayloadAction<string>) => {},
+
+        // Discussion Actions
+        fetchDiscussionsRequest: (state) => {},
+        setDiscussions: (state, action: PayloadAction<any[]>) => {
+            state.discussions = action.payload;
+        },
+        createDiscussionRequest: (state, action: PayloadAction<{ title: string; content: string }>) => {},
+        
+        // Faculty Actions
+        fetchFacultyPerformanceRequest: (state, action: PayloadAction<string>) => {},
+        setFacultyPerformance: (state, action: PayloadAction<any>) => {
+            state.facultyPerformance = action.payload;
+        },
     }
 });
 
@@ -239,6 +258,8 @@ export const {
     assignHODRequest,
     assignAdvisorRequest,
     assignCourseRequest,
+    addCourseRequest,
+    bulkAddCoursesRequest,
     createCourseRequest,
     fetchClassesRequest,
     fetchCoursesRequest,
@@ -308,6 +329,11 @@ export const {
     setBooks,
     addBookRequest,
     deleteBookRequest,
+    fetchDiscussionsRequest,
+    setDiscussions,
+    createDiscussionRequest,
+    fetchFacultyPerformanceRequest,
+    setFacultyPerformance,
 } = appSlice.actions;
 
 // Selectors
@@ -334,6 +360,8 @@ export const selectStudentDocuments = (state: RootState) => state.app.studentDoc
 export const selectPendingDocuments = (state: RootState) => state.app.pendingDocuments;
 export const selectNotifications = (state: RootState) => state.app.notifications;
 export const selectAllBooks = (state: RootState) => state.app.books;
+export const selectAllDiscussions = (state: RootState) => state.app.discussions;
+export const selectFacultyPerformance = (state: RootState) => state.app.facultyPerformance;
 
 
 export default appSlice.reducer;

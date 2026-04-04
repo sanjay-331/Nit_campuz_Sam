@@ -1,42 +1,41 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db';
 import PDFDocument from 'pdfkit';
-import path from 'path';
+import { UserRole } from '@prisma/client';
 
 export const generateNoDuesPdf = async (req: Request, res: Response): Promise<void> => {
     try {
-        const studentId = String(req.params.studentId);
+        const userId = String(req.params.userId || req.params.studentId);
 
-        // Fetch student data
-        const student = await prisma.user.findUnique({
-            where: { id: studentId },
+        // Fetch user data
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
             include: {
-                studentProfile: true
+                studentProfile: true,
+                department: true
             }
         });
 
-        const profile = student?.studentProfile as any;
-
-        if (!student || !profile) {
-            res.status(404).json({ message: 'Student profile not found' });
+        if (!user) {
+            res.status(404).json({ message: 'User profile not found' });
             return;
         }
 
         // Verify if a certificate has been issued
         const cert = await prisma.noDuesCertificate.findFirst({
-            where: { studentId: studentId, status: 'Issued' }
+            where: { userId: userId, status: 'Issued' } as any
         });
 
         if (!cert) {
-            res.status(403).json({ message: 'No Dues Certificate has not been issued yet for this student.' });
+            res.status(403).json({ message: 'No Dues Certificate has not been issued yet for this user.' });
             return;
         }
 
         // Generate PDF
         const doc = new PDFDocument({ margin: 50 });
         
-        // Ensure proper headers for PDF download
-        res.setHeader('Content-disposition', `attachment; filename=No_Dues_Certificate_${profile.regNo || 'unknown'}.pdf`);
+        const fileName = (user as any).studentProfile?.regNo || user.name.replace(/\s+/g, '_');
+        res.setHeader('Content-disposition', `attachment; filename=No_Dues_Certificate_${fileName}.pdf`);
         res.setHeader('Content-type', 'application/pdf');
 
         // Pipe the PDF directly to the response
@@ -49,19 +48,21 @@ export const generateNoDuesPdf = async (req: Request, res: Response): Promise<vo
         
         doc.moveDown(2);
         
-        doc.fontSize(12).font('Helvetica').text(`This is to certify that `, { continued: true });
-        doc.font('Helvetica-Bold').text(student.name, { continued: true });
-        doc.font('Helvetica').text(` (Registration No: ${profile.regNo || 'Unknown'}), `);
-        
-        // Fetch department manually to bypass include type issues
-        let deptName = 'Unknown';
-        if (student.departmentId) {
-            const dept = await prisma.department.findUnique({ where: { id: student.departmentId } });
-            if (dept) deptName = dept.name;
-        }
+        const isStudent = user.role === UserRole.STUDENT;
+        const profile = (user as any).studentProfile;
 
-        doc.text(`studying in the Department of `, { continued: true });
-        doc.font('Helvetica-Bold').text(deptName, { continued: true });
+        doc.fontSize(12).font('Helvetica').text(`This is to certify that `, { continued: true });
+        doc.font('Helvetica-Bold').text(user.name, { continued: true });
+        
+        if (isStudent && profile) {
+            doc.font('Helvetica').text(` (Registration No: ${profile.regNo || 'Unknown'}), `);
+            doc.text(`studying in the Department of `, { continued: true });
+        } else {
+            doc.font('Helvetica').text(` (${(user as any).designation || 'Staff Member'}), `);
+            doc.text(`working in the Department of `, { continued: true });
+        }
+        
+        doc.font('Helvetica-Bold').text(user.department?.name || 'Unknown', { continued: true });
         doc.font('Helvetica').text(`, has successfully cleared all dues with the library, department, and accounts section.`);
         
         doc.moveDown(2);
@@ -74,7 +75,7 @@ export const generateNoDuesPdf = async (req: Request, res: Response): Promise<vo
         doc.text('_______________________', { align: 'left', continued: true });
         doc.text('_______________________', { align: 'right' });
         doc.text('Head of Department', { align: 'left', continued: true });
-        doc.text('Principal         ', { align: 'right' });
+        doc.text('Principal / Registrar', { align: 'right' });
 
         // Finalize the PDF
         doc.end();

@@ -5,7 +5,7 @@ import { NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser, selectCan, selectUserPermissions } from '../../store/slices/authSlice';
 import { UserRole, Permission } from '../../types';
-import { DashboardIcon, UsersIcon, BookOpenIcon, AcademicCapIcon, ClipboardListIcon, BeakerIcon, OfficeBuildingIcon, DocumentReportIcon, XIcon, BriefcaseIcon, UploadIcon, PencilIcon, SettingsIcon, LifebuoyIcon, BarChartIcon, UserIcon, NitCampuzLogo, ShieldCheckIcon, HeartIcon, CheckCircleIcon, RocketIcon } from '../icons/Icons';
+import { DashboardIcon, UsersIcon, BookOpenIcon, AcademicCapIcon, ClipboardListIcon, BeakerIcon, OfficeBuildingIcon, DocumentReportIcon, XIcon, BriefcaseIcon, UploadIcon, PencilIcon, SettingsIcon, LifebuoyIcon, BarChartIcon, UserIcon, NitCampuzLogo, ShieldCheckIcon, HeartIcon, CheckCircleIcon, RocketIcon, MessageSquareIcon } from '../icons/Icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { selectAllClasses, selectAllMentorAssignments } from '../../store/slices/appSlice';
 
@@ -38,6 +38,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Logs', path: '/logs', icon: ClipboardListIcon, permission: Permission.VIEW_LOGS },
     { name: 'Verifications', path: '/verifications', icon: ShieldCheckIcon, permission: Permission.MANAGE_USERS },
     { name: 'Permissions', path: '/permissions', icon: ShieldCheckIcon, permission: Permission.MANAGE_USERS },
+    { name: 'Discussions', path: '/discussions', icon: MessageSquareIcon },
   ],
   [UserRole.PRINCIPAL]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon, permission: Permission.VIEW_USERS },
@@ -47,6 +48,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Verifications', path: '/verifications', icon: ShieldCheckIcon, permission: Permission.VIEW_USERS },
     { name: 'Verify Results', path: '/marks-verification', icon: CheckCircleIcon, permission: Permission.VIEW_USERS },
     { name: 'Reports', path: '/reports', icon: DocumentReportIcon, permission: Permission.GENERATE_REPORTS },
+    { name: 'Discussions', path: '/discussions', icon: MessageSquareIcon },
   ],
   [UserRole.HOD]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon, permission: Permission.VIEW_USERS },
@@ -60,6 +62,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Approvals', path: '/approvals', icon: CheckCircleIcon, permission: Permission.VIEW_USERS },
     { name: 'Verifications', path: '/verifications', icon: ShieldCheckIcon, permission: Permission.VIEW_USERS },
     { name: 'Verify Results', path: '/marks-verification', icon: CheckCircleIcon, permission: Permission.VIEW_USERS },
+    { name: 'Discussions', path: '/discussions', icon: MessageSquareIcon },
   ],
   [UserRole.STAFF]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon },
@@ -73,7 +76,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'e-Library', path: '/library', icon: BookOpenIcon },
     // FIX: Added missing 'icon' property.
     { name: 'Class Advisor', path: '/class-advisor', icon: UserIcon, isAdvisor: true },
-    // FIX: Added missing 'icon' property.
+    { name: 'Discussions', path: '/discussions', icon: MessageSquareIcon },
   ],
   [UserRole.STUDENT]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon },
@@ -83,6 +86,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'e-Library', path: '/library', icon: BookOpenIcon },
     { name: 'Leave / OD', path: '/leave-od', icon: BriefcaseIcon },
     { name: 'Documents', path: '/documents', icon: UploadIcon },
+    { name: 'Discussions', path: '/discussions', icon: MessageSquareIcon },
   ],
   [UserRole.EXAM_CELL]: [
     { name: 'Dashboard', path: '/', icon: DashboardIcon },
@@ -90,6 +94,7 @@ const sidebarLinks: Record<UserRole, SidebarLink[]> = {
     { name: 'Results', path: '/results', icon: UploadIcon },
     { name: 'Reports', path: '/reports', icon: DocumentReportIcon },
     { name: 'Schedules', path: '/schedules', icon: ClipboardListIcon },
+    { name: 'Discussions', path: '/discussions', icon: MessageSquareIcon },
   ],
 };
 

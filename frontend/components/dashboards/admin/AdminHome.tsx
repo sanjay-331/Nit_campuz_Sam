@@ -50,6 +50,7 @@ const AdminHome: React.FC = () => {
         { label: "Promote Students", path: "/promote" },
         { label: "Move Graduates to Alumni", path: "/alumni" },
         { label: "Attendance Analysis", path: "/attendance-analytics" },
+        { label: "Course Management", path: "/courses" },
         { label: "User Management", path: "/users" }
     ];
 
