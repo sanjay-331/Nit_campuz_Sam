@@ -174,6 +174,9 @@ const UserManagement: React.FC = () => {
                     <TableCell>
                       <span className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-800">{user.role}</span>
                     </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <span className="text-xs font-medium text-slate-700">{(user as any).department?.name || 'N/A'}</span>
+                    </TableCell>
                     <TableCell className="hidden xl:table-cell">
                       <span className="text-xs text-slate-500">{user.dateJoined ? new Date(user.dateJoined).toLocaleDateString() : 'N/A'}</span>
                     </TableCell>

@@ -59,6 +59,7 @@ export interface User {
   email: string;
   role: UserRole;
   departmentId?: string;
+  department?: Department;
   status: StudentStatus;
   phone?: string;
   address?: string;
